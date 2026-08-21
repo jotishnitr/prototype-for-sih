@@ -1,11 +1,12 @@
 const Incident = require('../models/Incident');
 const Resource = require('../models/Resource');
 const User = require('../models/User');
+const Allocation = require('../models/Allocation')
 
 const getStats = async (req, res) => {
     try {
         const userId = req.user.id;
-        const user = User.findOne({ _id: userId });
+        const user = await User.findOne({ _id: userId });
         if (!user) return res.status(401).json({ message: 'User does not exist' });
         const jurisdictionId = user.jurisdiction_id;
 
@@ -27,10 +28,32 @@ const getStats = async (req, res) => {
         })
         const shelterCapacity = totalCapacity - remainingCapacity;
 
+        //calculating estResponse ( T.C - O(2n) )
+        const userIncidents = await Incident.find({ jurisdiction_id: jurisdictionId })
+        const userAllocations = await Allocation.find({ jurisdiction_id: jurisdictionId })
+
+        // Build a lookup map for allocation creation times: incident_id -> createdAt
+        const allocationMap = new Map();
+        userAllocations.forEach(alloc => {
+            if (alloc.incident_id) {
+                allocationMap.set(alloc.incident_id.toString(), alloc.createdAt);
+            }
+        });
+
+        let estResponse = 0;
+        userIncidents.forEach(incident => {
+            const allocTime = allocationMap.get(incident._id.toString());
+            if (allocTime) {
+                // Allocation time (later) - Incident creation time (earlier)
+                estResponse += (allocTime - incident.createdAt);
+            }
+        });
+
         return res.status(200).json({
             activeIncidents,
             unitsDispatched,
-            shelterCapacity
+            shelterCapacity,
+            estResponse
         });
     } catch (error) {
         console.log(error.message);

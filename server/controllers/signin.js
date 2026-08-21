@@ -16,7 +16,7 @@ const signin = async (req, res) => {
         }
         const acessToken = createAcessToken(user.id);
         const refreshToken = createRefreshToken(user.id);
-        
+
         // Store refresh token in database
         user.refreshToken = refreshToken;
         await user.save();

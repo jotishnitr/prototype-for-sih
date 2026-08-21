@@ -33,9 +33,9 @@ const getIncidentDetails = async (req, res) => {
                     incident.resource_contact = resource.contact_phone;
 
                     // Include capacity details only if the resource is a shelter
-                    if (resource.type === 'shelter') {
-                        incident.resource_capacity_total = resource.capacity_total;
-                        incident.resource_capacity_remaining = resource.capacity_remaining;
+                    if (resource.type === 'shelter' && resource.shelter) {
+                        incident.resource_capacity_total = resource.shelter.capacity_total;
+                        incident.resource_capacity_remaining = resource.shelter.capacity_remaining;
                     }
                 }
             }

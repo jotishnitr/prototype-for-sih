@@ -1,7 +1,4 @@
 const mongoose = require('mongoose');
-const Incident = require('../models/Incident')
-const Resource = require('../models/Resource')
-const User = require('../models/User')
 const allocationSchema = new mongoose.Schema({
     incident_id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -16,6 +13,10 @@ const allocationSchema = new mongoose.Schema({
     allocated_by: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
+    },
+    jurisdiction_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Jurisdiction'
     },
     status: {
         type: String,

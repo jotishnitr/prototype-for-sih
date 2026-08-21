@@ -23,8 +23,10 @@ const getStats = async (req, res) => {
         let totalCapacity = 0;
         let remainingCapacity = 0;
         shelters.forEach((shelter) => {
-            totalCapacity += shelter.capacity_total;
-            remainingCapacity += shelter.capacity_remaining;
+            if (shelter.shelter) {
+                totalCapacity += shelter.shelter.capacity_total || 0;
+                remainingCapacity += shelter.shelter.capacity_remaining || 0;
+            }
         })
         const shelterCapacity = totalCapacity - remainingCapacity;
 

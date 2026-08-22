@@ -17,6 +17,7 @@ const getStatsRouter = require('./routes/getStats');
 const getIncidentDetailsRouter = require('./routes/getIncidentDetails');
 const postIncidentRouter = require('./routes/postIncident');
 const postAllocateRouter = require('./routes/postAllocate');
+const getAlertsRouter = require('./routes/getAlerts');
 
 app.use('/api', signupRouter);
 app.use('/api', signinRouter);
@@ -26,6 +27,7 @@ app.use('/api', getStatsRouter);
 app.use('/api', getIncidentDetailsRouter);
 app.use('/api', postIncidentRouter);
 app.use('/api', postAllocateRouter);
+app.use('/api', getAlertsRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello World!')

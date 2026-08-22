@@ -32,24 +32,32 @@ const resourceSchema = new mongoose.Schema({
     rescue_team: {
         total_members: { type: Number, default: 0 },       // full team strength
         available_members: { type: Number, default: 0 },   // not deployed
-        boats: { type: Number, default: 0 },
-        vehicles: { type: Number, default: 0 },
+        total_boats: { type: Number, default: 0 },
+        available_boats: { type: Number, default: 0 },
+        total_vehicles: { type: Number, default: 0 },
+        available_vehicles: { type: Number, default: 0 },
     },
 
     // MEDICAL UNIT specific
     medical_unit: {
         total_staff: { type: Number, default: 0 },
         available_staff: { type: Number, default: 0 },
-        ambulances: { type: Number, default: 0 },
-        beds: { type: Number, default: 0 },
+        total_ambulances: { type: Number, default: 0 },
+        available_ambulances: { type: Number, default: 0 },
+        total_beds: { type: Number, default: 0 },
+        available_beds: { type: Number, default: 0 },
     },
 
     // SUPPLY DEPOT specific
     supply_depot: {
-        food_packets: { type: Number, default: 0 },
-        water_litres: { type: Number, default: 0 },
-        medicine_kits: { type: Number, default: 0 },
-        blankets: { type: Number, default: 0 },
+        total_food_packets: { type: Number, default: 0 },
+        available_food_packets: { type: Number, default: 0 },
+        total_water_litres: { type: Number, default: 0 },
+        available_water_litres: { type: Number, default: 0 },
+        total_medicine_kits: { type: Number, default: 0 },
+        available_medicine_kits: { type: Number, default: 0 },
+        total_blankets: { type: Number, default: 0 },
+        available_blankets: { type: Number, default: 0 },
     },
 
 }, { timestamps: true });

@@ -2,9 +2,14 @@ const Resource = require('../models/Resource');
 const Allocation = require('../models/Allocation');
 const Incident = require('../models/Incident');
 const User = require('../models/User')
+const AlertLog = require('../models/AlertLog')
+const { broadcastToJurisdiction } = require('../utils/wsEvents');
+
+
 const postAllocate = async (req, res) => {
     try {
-        const { resource_id, incident_id, allocated_by } = req.body;
+        const io = req.app.get('io');
+        const { resource_id, incident_id } = req.body;
         const resource = await Resource.findById(resource_id);
         const incident = await Incident.findById(incident_id);
         const userId = req.user.id;
@@ -49,7 +54,25 @@ const postAllocate = async (req, res) => {
             allocated_by: userId,
         });
 
+
         await allocation.save();
+
+        incident.status = 'allocated';
+        incident.allocated_resource_id = resource._id;
+        await incident.save();
+
+        const updatedAlert = await AlertLog.findOneAndUpdate(
+            { incident_id: incident._id },
+            { $set: { status: "allocated", resource_id: resource._id, title: `Unit deployed ${resource.name} - ${resource.type}` } },
+            { new: true }
+        );
+
+        broadcastToJurisdiction(io, incident.jurisdiction_id.toString(), 'allocation:created', {
+            incident_id: incident._id,
+            resource_id: resource._id,
+            incident_location: incident.location,
+            resource_location: resource.location
+        })
 
         return res.status(200).json({ message: "Resource allocated successfully" });
     }

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const postIncident = require('../controllers/PostIncident');
+const postIncident = require('../controllers/postIncident');
 const auth = require('../middlewares/auth');
 
 router.route('/postIncident').post(auth, postIncident);

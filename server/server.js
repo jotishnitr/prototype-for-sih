@@ -4,8 +4,8 @@ const port = process.env.PORT || 3000;
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const cookieParser = require('cookie-parser');
-const http = require('http')
-const { Server } = require('http');
+const http = require('http');
+const { Server } = require('socket.io');
 
 dotenv.config();
 connectDB();
@@ -27,6 +27,7 @@ const postResourceRouter = require('./routes/postResource');
 const autoAllocateRouter = require('./routes/autoAllocate');
 const updateIncidentStatusRouter = require('./routes/updateIncidentStatus');
 const deleteResourcesRouter = require('./routes/deleteResources');
+const postJurisdictionRouter = require('./routes/postJurisdiction');
 const Jurisdiction = require('./models/Jurisdiction');
 
 app.use('/api', signupRouter);
@@ -44,6 +45,7 @@ app.use('/api', postResourceRouter);
 app.use('/api', autoAllocateRouter);
 app.use('/api', updateIncidentStatusRouter);
 app.use('/api', deleteResourcesRouter);
+app.use('/api', postJurisdictionRouter);
 
 app.get('/', (req, res) => res.send('ResQNet API running'));
 

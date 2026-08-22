@@ -3,10 +3,11 @@ const Jurisdiction = require('./Jurisdiction');
 const Incident = require('./Incident');
 const Resource = require('./Resource');
 const alertLogSchema = new mongoose.Schema({
-    type: { type: String, enum: ['breach', 'resource_warning', 'unit_deployed', 'system_update', 'imd'] },
+    type: { type: String, enum: ['breach', 'resource_warning', 'unit_deployed', 'system_update', 'imd', 'flood', 'landslide', 'cyclone', 'medical', 'fire', 'incident'] },
     title: { type: String, required: true },
     message: String,
     severity: { type: String, enum: ['critical', 'warning', 'info'], default: 'info' },
+    status: { type: String, default: 'unallocated' },
     jurisdiction_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Jurisdiction' },
     incident_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Incident' },
     resource_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Resource' },

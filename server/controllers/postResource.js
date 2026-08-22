@@ -10,12 +10,13 @@ const postResource = async (req, res) => {
             location,
             address,
             contact_phone,
-            jurisdiction_id,
             shelter,
+            jurisdiction_id,
             rescue_team,
             medical_unit,
             supply_depot
         } = req.body;
+
 
         const resource = new Resource({
             name,

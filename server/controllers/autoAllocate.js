@@ -3,15 +3,17 @@ const Incident = require('../models/Incident');
 const Allocation = require('../models/Allocation');
 const User = require('../models/User');
 const AlertLog = require('../models/AlertLog');
+const SmsLog = require('../models/SmsLog');
 const { broadcastToJurisdiction } = require('../utils/wsEvents');
+const sendSms = require('../utils/sendSms');
 const autoAllocate = async (req, res) => {
     try {
         const io = req.app.get('io');
         const userId = req.user.id;
         const incidentId = req.params.id;
         const user = await User.findById(userId);
-        const jurisdiction_id = user.jurisdiction_id;
         const incident = await Incident.findById(incidentId);
+        const jurisdiction_id = incident.jurisdiction_id;
         if (!incident) {
             return res.status(404).json({ message: "Incident not found" });
         }
@@ -85,6 +87,41 @@ const autoAllocate = async (req, res) => {
             resource_location: resource.location
         })
         broadcastToJurisdiction(io, jurisdiction_id.toString(), 'alert:new', updatedAlert)
+
+        const reporterSms = await sendSms(incident.reporter_phone, `ResQNet: Resource allocated. Name: ${resource.name} Contact: ${resource.contact_phone}.`);
+        if (reporterSms && reporterSms.return) {
+            console.log("SMS sent successfully to reporter");
+        }
+        else {
+            console.error("Failed to send SMS to reporter");
+        }
+        const smsLog1 = new SmsLog({
+            resource_id: resource._id,
+            incident_id: incidentId,
+            jurisdiction_id,
+            to: incident.reporter_phone,
+            message: `ResQNet: Resource allocated. Name: ${resource.name} Contact: ${resource.contact_phone}.`,
+            status: reporterSms && reporterSms.return ? "sent" : "failed"
+        });
+        await smsLog1.save();
+
+        const resourceSms = await sendSms(resource.contact_phone, `ResQNet: Attend the incident. Reporter Contactno:${incident.reporter_phone} Incident Description :${incident.description} , Incident Location :${incident.location}`)
+        if (resourceSms && resourceSms.return) {
+            console.log("SMS sent successfully to resource");
+        }
+        else {
+            console.error("Failed to send SMS to resource");
+        }
+        const smsLog2 = new SmsLog({
+            resource_id: resource._id,
+            incident_id: incidentId,
+            jurisdiction_id,
+            to: resource.contact_phone,
+            message: `ResQNet: Attend the incident. Reporter Contactno:${incident.reporter_phone} Incident Description :${incident.description} , Incident Location :${incident.location}`,
+            status: resourceSms && resourceSms.return ? "sent" : "failed"
+        });
+        await smsLog2.save();
+
         return res.status(200).json({ message: "Resource allocated successfully" });
 
     } catch (error) {

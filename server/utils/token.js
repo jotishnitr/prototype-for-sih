@@ -1,7 +1,7 @@
 const { sign } = require('jsonwebtoken');
 
 const createAcessToken = (id) => {
-    return sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 15 * 60 })
+    return sign({ id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d' })
 }
 const createRefreshToken = (id) => {
     return sign({ id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: 15 * 24 * 60 * 60 })

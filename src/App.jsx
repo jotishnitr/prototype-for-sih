@@ -4,19 +4,30 @@ import Navbar from './components/Navbar.jsx'
 import Home from './pages/Home.jsx'
 import ReportIncident from './pages/ReportIncident.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import Login from './pages/Login.jsx'
 
 function App() {
-  // keeping the logged in user here so the ReportIncident page can check it
-  // not using any fancy auth library, just plain state for the prototype
   const [user, setUser] = useState(null)
+
+  function handleLogin(accesstoken, userInfo) {
+    setUser(userInfo)
+  }
+
+  function handleLogout() {
+    setUser(null)
+  }
 
   return (
     <>
-      <Navbar />
+      <Navbar user={user} onLogout={handleLogout} />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/report" element={<ReportIncident user={user} setUser={setUser} />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={<Dashboard onUnauthorized={handleLogout} />}
+        />
       </Routes>
     </>
   )

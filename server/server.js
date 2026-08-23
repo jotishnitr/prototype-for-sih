@@ -22,6 +22,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(cookieParser());
 
+const verifyRouter = require('./routes/verify');
 const signupRouter = require('./routes/signup');
 const signinRouter = require('./routes/signin');
 const signoutRouter = require('./routes/signout');
@@ -41,6 +42,7 @@ const deleteResourcesRouter = require('./routes/deleteResources');
 const postJurisdictionRouter = require('./routes/postJurisdiction');
 const Jurisdiction = require('./models/Jurisdiction');
 
+app.use('/api', verifyRouter);
 app.use('/api', signupRouter);
 app.use('/api', signinRouter);
 app.use('/api', signoutRouter);

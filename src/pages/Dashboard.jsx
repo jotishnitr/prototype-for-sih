@@ -14,7 +14,7 @@ import {
 
 const MAP_CENTER = [20.2975, 85.8290]
 
-function Dashboard() {
+function Dashboard({ onUnauthorized }) {
 
   const [incidents, setIncidents] = useState(null)
   const [resources, setResources] = useState(initialResources)
@@ -32,14 +32,37 @@ function Dashboard() {
   const [shelterCapacity, setShelterCapacity] = useState(0)
   const [estResponse, setEstResponse] = useState(0)
 
+  const [isVerified, setIsVerified] = useState(false)
+
   useEffect(() => {
+    async function verifyUser() {
+      try {
+        const response = await fetch("https://resqnet-fmhd.onrender.com/api/verify", {
+          method: "GET",
+          credentials: "include"
+        })
+        if (!response.ok) {
+          if (onUnauthorized) onUnauthorized()
+          return
+        }
+        setIsVerified(true)
+      } catch (err) {
+        console.error("User verification failed:", err)
+        if (onUnauthorized) onUnauthorized()
+      }
+    }
+
+    verifyUser()
+  }, [onUnauthorized])
+
+  useEffect(() => {
+    if (!isVerified) return
+
     async function getStats() {
       try {
         const response = await fetch("https://resqnet-fmhd.onrender.com/api/getStats", {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          }
+          credentials: "include"
         })
         if (response.ok) {
           const data = await response.json()
@@ -53,17 +76,12 @@ function Dashboard() {
         console.warn("Could not load live stats from server:", err)
       }
     }
-    getStats()
-  }, [])
 
-  useEffect(() => {
     async function getIncidents() {
       try {
         const response = await fetch("https://resqnet-fmhd.onrender.com/api/getIncidentsDetails", {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          credentials: "include"
         })
         if (response.ok) {
           const data = await response.json()
@@ -76,17 +94,12 @@ function Dashboard() {
         console.warn("Could not load live incidents from server:", err)
       }
     }
-    getIncidents()
-  }, [])
 
-  useEffect(() => {
     async function getResources() {
       try {
         const response = await fetch("https://resqnet-fmhd.onrender.com/api/getResources", {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          }
+          credentials: "include"
         })
         if (response.ok) {
           const data = await response.json()
@@ -99,8 +112,11 @@ function Dashboard() {
         console.warn("Could not load live resources from server:", err)
       }
     }
+
+    getStats()
+    getIncidents()
     getResources()
-  }, [])
+  }, [isVerified])
 
   function selectIncident(inc) {
     setSelectedId(inc.id || inc._id)

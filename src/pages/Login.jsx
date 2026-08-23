@@ -1,26 +1,49 @@
 import { useState } from 'react'
-
+import { useNavigate } from 'react-router-dom'
 
 function Login({ onLogin }) {
-  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
 
-    if (name.trim() === '' || email.trim() === '' || password.trim() === '') {
+    if (email.trim() === '' || password.trim() === '') {
       setError('Please fill all the fields')
       return
     }
 
-    if (password.length < 4) {
-      setError('Password should be at least 4 characters')
-      return
-    }
+    setLoading(true)
+    setError('')
 
-    onLogin({ name: name, email: email })
+    try {
+      const response = await fetch("https://resqnet-fmhd.onrender.com/api/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.accesstoken) {
+        if (onLogin) {
+          onLogin(data.accesstoken, { email })
+        }
+        navigate('/dashboard')
+      } else {
+        setError(data.message || 'Invalid email or password')
+      }
+    } catch (err) {
+      console.error("Login error:", err)
+      setError('Failed to connect to login server. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -28,21 +51,10 @@ function Login({ onLogin }) {
       <div className="card" style={{ padding: 26 }}>
         <h1 style={{ fontSize: 22, marginBottom: 6 }}>Sign In</h1>
         <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>
-          Please sign in before reporting an incident. This helps authorities know who reported it.
+          Please sign in to access the Control Center Dashboard.
         </p>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Full Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={inputStyle}
-              placeholder="Enter your name"
-            />
-          </div>
-
           <div style={{ marginBottom: 14 }}>
             <label style={labelStyle}>Email</label>
             <input
@@ -69,13 +81,9 @@ function Login({ onLogin }) {
             <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>{error}</p>
           )}
 
-          <button type="submit" className="btn btn-primary btn-full">
-            Sign In &amp; Continue
+          <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+            {loading ? 'Signing In...' : 'Sign In & Continue'}
           </button>
-
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 14, textAlign: 'center' }}>
-            This is a prototype login. Any name, email and password (4+ characters) will work.
-          </p>
         </form>
       </div>
     </main>

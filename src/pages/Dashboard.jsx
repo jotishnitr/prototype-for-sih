@@ -1,134 +1,114 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import MapView from '../components/MapView.jsx'
 import StatsCard from '../components/StatsCard.jsx'
 import IncidentCard from '../components/IncidentCard.jsx'
-import ResourceCard from '../components/ResourceCard.jsx'
 import AlertCard from '../components/AlertCard.jsx'
 import ActivityFeed from '../components/ActivityFeed.jsx'
 import {
-  incidents as initialIncidents,
   resources as initialResources,
   shelters,
   supplies,
   weatherAlert,
-  activityFeedSeed,
-  getDistanceKm,
-  suitableResourceMap
+  activityFeedSeed
 } from '../data/mockData.js'
 
 const MAP_CENTER = [20.2975, 85.8290]
 
 function Dashboard() {
-  const [incidents, setIncidents] = useState(initialIncidents)
+
+  const [incidents, setIncidents] = useState(null)
   const [resources, setResources] = useState(initialResources)
   const [activity, setActivity] = useState(activityFeedSeed)
   const [selectedId, setSelectedId] = useState(null)
   const [viewMode, setViewMode] = useState('reports')
-  const [assignedLine, setAssignedLine] = useState(null)
-  const [recommendation, setRecommendation] = useState(null)
-  const [smsMessage, setSmsMessage] = useState(null)
-  const [nextIncidentNum, setNextIncidentNum] = useState(1048)
 
-  const selectedIncident = incidents.find((i) => i.id === selectedId) || null
+  const selectedIncident = Array.isArray(incidents)
+    ? incidents.find((i) => i.id === selectedId || i._id === selectedId)
+    : null
 
-  const activeCount = incidents.filter((i) => i.status !== 'Resolved').length
-  const criticalCount = incidents.filter((i) => i.severity === 'Critical' && i.status !== 'Resolved').length
-  const availableTeams = resources.filter((r) => r.type === 'Rescue Team' && r.status === 'Available').length
-  const availableShelters = shelters.filter((s) => s.status === 'Available').length
+  const [activeCount, setActiveCount] = useState(0)
+  const [unitsDispatched, setUnitsDispatched] = useState(0)
+  const [totalUnits, setTotalUnits] = useState(0)
+  const [shelterCapacity, setShelterCapacity] = useState(0)
+  const [estResponse, setEstResponse] = useState(0)
 
-  // find the 3 closest available resources to the selected incident
-  // just recalculating this every render, the data is small so it's fine
-  let nearestResources = []
-  if (selectedIncident) {
-    const availableOnes = resources.filter((r) => r.status === 'Available')
-    const withDistance = []
-    for (let i = 0; i < availableOnes.length; i++) {
-      const r = availableOnes[i]
-      const dist = getDistanceKm(selectedIncident.lat, selectedIncident.lng, r.lat, r.lng)
-      withDistance.push({ ...r, distance: dist })
-    }
-    withDistance.sort((a, b) => a.distance - b.distance)
-    nearestResources = withDistance.slice(0, 3)
-  }
-
-  function selectIncident(inc) {
-    setSelectedId(inc.id)
-    setRecommendation(null)
-  }
-
-  // this is the "auto find nearest resource" button logic
-  function findNearestSuitable() {
-    if (!selectedIncident) return
-
-    // get list of resource types that make sense for this incident type
-    const suitableTypes = suitableResourceMap[selectedIncident.type] || []
-
-    // step 1: only keep resources that are available AND the right type
-    let candidates = []
-    for (let i = 0; i < resources.length; i++) {
-      const r = resources[i]
-      if (r.status === 'Available' && suitableTypes.includes(r.type)) {
-        candidates.push({ ...r })
+  useEffect(() => {
+    async function getStats() {
+      try {
+        const response = await fetch("https://resqnet-fmhd.onrender.com/api/getStats", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setActiveCount(data.activeIncidents ?? 0)
+          setUnitsDispatched(data.unitsDispatched ?? 0)
+          setTotalUnits(data.resources?.length || 0)
+          setShelterCapacity(data.shelterCapacity ?? 0)
+          setEstResponse(data.estResponse ?? 0)
+        }
+      } catch (err) {
+        console.warn("Could not load live stats from server:", err)
       }
     }
+    getStats()
+  }, [])
 
-    // step 2: work out distance for each one
-    for (let i = 0; i < candidates.length; i++) {
-      candidates[i].distance = getDistanceKm(selectedIncident.lat, selectedIncident.lng, candidates[i].lat, candidates[i].lng)
+  useEffect(() => {
+    async function getIncidents() {
+      try {
+        const response = await fetch("https://resqnet-fmhd.onrender.com/api/getIncidentsDetails", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          },
+        })
+        if (response.ok) {
+          const data = await response.json()
+          const list = data.incidents || (Array.isArray(data) ? data : null)
+          if (list) {
+            setIncidents(list)
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load live incidents from server:", err)
+      }
     }
+    getIncidents()
+  }, [])
 
-    // step 3: sort so the closest one is first
-    candidates.sort((a, b) => a.distance - b.distance)
-
-    if (candidates.length === 0) {
-      setRecommendation({ none: true })
-    } else {
-      setRecommendation(candidates[0])
+  useEffect(() => {
+    async function getResources() {
+      try {
+        const response = await fetch("https://resqnet-fmhd.onrender.com/api/getResources", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          const list = data.resources || (Array.isArray(data) ? data : null)
+          if (list) {
+            setResources(list)
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load live resources from server:", err)
+      }
     }
-  }
+    getResources()
+  }, [])
 
-  function assignResource(resource) {
-    if (!selectedIncident) return
-
-    setIncidents((prev) =>
-      prev.map((i) => (i.id === selectedIncident.id ? { ...i, status: 'Assigned' } : i))
-    )
-    setResources((prev) =>
-      prev.map((r) => (r.id === resource.id ? { ...r, status: 'Deployed' } : r))
-    )
-    setAssignedLine({
-      from: { lat: selectedIncident.lat, lng: selectedIncident.lng },
-      to: { lat: resource.lat, lng: resource.lng }
-    })
-    setActivity((prev) => [
-      { id: Date.now(), text: `${resource.id} assigned to ${selectedIncident.id}`, type: 'assign' },
-      ...prev
-    ])
-    setRecommendation(null)
-  }
-
-  function simulateSms() {
-    const id = `INC-1${nextIncidentNum}`
-    setNextIncidentNum((n) => n + 1)
-    const newIncident = {
-      id,
-      type: 'Flood',
-      severity: 'Critical',
-      lat: 22.26,
-      lng: 84.85,
-      status: 'Unassigned',
-      description: 'Reported via SMS: FLOOD CRITICAL 22.26 84.85',
-      reportedTime: 'just now',
-      sector: 'Unmapped Sector'
-    }
-    setIncidents((prev) => [newIncident, ...prev])
-    setActivity((prev) => [{ id: Date.now(), text: `SMS report converted to ${id}`, type: 'sms' }, ...prev])
-    setSmsMessage(newIncident)
+  function selectIncident(inc) {
+    setSelectedId(inc.id || inc._id)
   }
 
   return (
     <main style={{ background: 'var(--bg)' }}>
-      {/* Page header, same style as the rest of the site */}
+      {/* Page header */}
       <div style={{ background: '#fff', borderBottom: '1px solid var(--border)' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', flexWrap: 'wrap', gap: 10 }}>
           <div>
@@ -142,10 +122,10 @@ function Dashboard() {
       {/* Stats */}
       <div className="container" style={{ padding: '20px 24px 0' }}>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <StatsCard label="Active Incidents" value={activeCount} accent="var(--navy)" />
-          <StatsCard label="Critical Incidents" value={criticalCount} accent="var(--red)" />
-          <StatsCard label="Available Teams" value={availableTeams} accent="var(--green)" />
-          <StatsCard label="Available Shelters" value={availableShelters} accent="var(--blue)" />
+          <StatsCard label="Active Incidents" value={activeCount} accent="var(--red)" />
+          <StatsCard label="Units Dispatched" value={`${unitsDispatched}/${totalUnits}`} accent="var(--blue)" />
+          <StatsCard label="Shelter Occupancy" value={shelterCapacity} accent="var(--orange)" />
+          <StatsCard label="Est. Response" value={estResponse} accent="var(--green)" />
         </div>
       </div>
 
@@ -174,26 +154,11 @@ function Dashboard() {
             <MapView
               incidents={incidents}
               resources={resources}
-              shelters={shelters}
-              viewMode={viewMode}
               selectedIncident={selectedIncident}
+              viewMode={viewMode}
               onSelectIncident={selectIncident}
-              assignedLine={assignedLine}
               center={MAP_CENTER}
             />
-          </div>
-
-          {/* Story strip - makes the flow obvious at a glance */}
-          <div className="card" style={{ marginTop: 14, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, fontSize: 13, fontWeight: 600, color: 'var(--text-muted)' }}>
-            <span>🔴 Incident</span>
-            <span>→</span>
-            <span>System finds nearest resource</span>
-            <span>→</span>
-            <span>🚑 Resource</span>
-            <span>→</span>
-            <span>Assign</span>
-            <span>→</span>
-            <span style={{ color: 'var(--green)' }}>🟢 Response started</span>
           </div>
 
           {/* Shelters & supplies */}
@@ -243,26 +208,6 @@ function Dashboard() {
               </div>
             </div>
           </div>
-
-          {/* SMS fallback */}
-          <div className="card" style={{ marginTop: 14, padding: 18 }}>
-            <h3 style={panelTitle}>LOW CONNECTIVITY MODE</h3>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
-              Receive emergency reports through SMS when internet connectivity is unavailable.
-            </p>
-            <button className="btn btn-outline btn-small" onClick={simulateSms}>
-              Simulate Incoming SMS
-            </button>
-
-            {smsMessage && (
-              <div style={{ marginTop: 14, background: 'var(--blue-bg)', borderRadius: 8, padding: 14 }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--blue)', marginBottom: 6 }}>SMS REPORT RECEIVED</p>
-                <p style={{ fontSize: 13, marginBottom: 4 }}>Location detected: {smsMessage.lat}, {smsMessage.lng}</p>
-                <p style={{ fontSize: 13, marginBottom: 4 }}>Severity: {smsMessage.severity}</p>
-                <p style={{ fontSize: 13 }}>Status: {smsMessage.status}</p>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Side panel */}
@@ -272,61 +217,19 @@ function Dashboard() {
               <h3 style={panelTitle}>INCIDENT DETAILS</h3>
               <IncidentCard incident={selectedIncident} />
 
-              {selectedIncident.status !== 'Assigned' && (
-                <>
-                  <button className="btn btn-secondary btn-full" onClick={findNearestSuitable}>
-                    Auto Find Nearest Resource
-                  </button>
-
-                  {recommendation && !recommendation.none && (
-                    <div className="card" style={{ padding: 14, background: 'var(--green-bg)', border: '1px solid var(--green)' }}>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', marginBottom: 6 }}>
-                        RECOMMENDED RESOURCE
-                      </p>
-                      <p style={{ fontWeight: 700, marginBottom: 4 }}>
-                        {resourceEmojiFor(recommendation.type)} {recommendation.id}
-                      </p>
-                      <p style={{ fontSize: 13, marginBottom: 4 }}>Distance: {recommendation.distance.toFixed(1)} km</p>
-                      <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>
-                        Reason: Nearest available resource suitable for this incident.
-                      </p>
-                      <button className="btn btn-primary btn-small btn-full" onClick={() => assignResource(recommendation)}>
-                        Assign Resource
-                      </button>
-                    </div>
-                  )}
-
-                  {recommendation && recommendation.none && (
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                      No suitable available resource found nearby.
-                    </p>
-                  )}
-
-                  <h3 style={panelTitle}>RECOMMENDED RESOURCES</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {nearestResources.map((r) => (
-                      <ResourceCard key={r.id} resource={r} distance={r.distance} onAssign={assignResource} />
-                    ))}
-                    {nearestResources.length === 0 && (
-                      <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>No available resources nearby.</p>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {selectedIncident.status === 'Assigned' && (
+              {selectedIncident.status === 'Assigned' || selectedIncident.status === 'allocated' ? (
                 <div className="card" style={{ padding: 14, background: 'var(--blue-bg)' }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--blue)' }}>Response in progress</p>
                   <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
                     A resource has been deployed for this incident.
                   </p>
                 </div>
-              )}
+              ) : null}
             </div>
           ) : (
             <div className="card" style={{ padding: 18 }}>
               <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                Click any incident marker on the map to view details and assign a resource.
+                Click any incident marker on the map to view details.
               </p>
             </div>
           )}
@@ -355,16 +258,6 @@ const panelTitle = {
   fontWeight: 700,
   color: 'var(--text-muted)',
   letterSpacing: '0.02em'
-}
-
-function resourceEmojiFor(type) {
-  const map = {
-    'Rescue Team': '👨‍🚒',
-    'Ambulance': '🚑',
-    'Rescue Boat': '🚤',
-    'Relief Supply': '📦'
-  }
-  return map[type] || '📍'
 }
 
 export default Dashboard

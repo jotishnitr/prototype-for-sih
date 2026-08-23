@@ -9,6 +9,16 @@ const { Server } = require('socket.io');
 
 dotenv.config();
 connectDB();
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -21,6 +31,7 @@ const getIncidentDetailsRouter = require('./routes/getIncidentDetails');
 const postIncidentRouter = require('./routes/postIncident');
 const postAllocateRouter = require('./routes/postAllocate');
 const getResourceDetailsRouter = require('./routes/getResourceDetails');
+const getResourcesRouter = require('./routes/getResources');
 const getAlertsRouter = require('./routes/getAlerts');
 const getResourceReadinessRouter = require('./routes/getResourceReadiness');
 const postResourceRouter = require('./routes/postResource');
@@ -39,6 +50,7 @@ app.use('/api', getIncidentDetailsRouter);
 app.use('/api', postIncidentRouter);
 app.use('/api', postAllocateRouter);
 app.use('/api', getResourceDetailsRouter);
+app.use('/api', getResourcesRouter);
 app.use('/api', getAlertsRouter);
 app.use('/api', getResourceReadinessRouter);
 app.use('/api', postResourceRouter);

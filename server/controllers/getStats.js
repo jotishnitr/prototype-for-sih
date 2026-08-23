@@ -54,6 +54,7 @@ const getStats = async (req, res) => {
         return res.status(200).json({
             activeIncidents,
             unitsDispatched,
+            resources,
             shelterCapacity,
             estResponse
         });

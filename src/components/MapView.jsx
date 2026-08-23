@@ -64,29 +64,43 @@ function shelterIcon() {
   })
 }
 
-// Keeps the map centered when the selected incident changes
-function RecenterOnSelect({ incident }) {
+// Keeps the map centered when the selected incident or resource changes
+function RecenterOnSelect({ incident, resource }) {
   const map = useMap()
   useEffect(() => {
     if (incident) {
-      map.flyTo([incident.lat, incident.lng], Math.max(map.getZoom(), 13), { duration: 0.6 })
+      const lat = incident.lat ?? incident.location?.coordinates?.[1]
+      const lng = incident.lng ?? incident.location?.coordinates?.[0]
+      if (lat != null && lng != null) {
+        map.flyTo([lat, lng], Math.max(map.getZoom(), 13), { duration: 0.6 })
+      }
+    } else if (resource) {
+      const lat = resource.lat ?? resource.location?.coordinates?.[1]
+      const lng = resource.lng ?? resource.location?.coordinates?.[0]
+      if (lat != null && lng != null) {
+        map.flyTo([lat, lng], Math.max(map.getZoom(), 13), { duration: 0.6 })
+      }
     }
-  }, [incident, map])
+  }, [incident, resource, map])
   return null
 }
 
 function MapView({
-  incidents,
-  resources,
-  shelters,
-  viewMode,
-  selectedIncident,
+  incidents = [],
+  resources = [],
+  shelters = [],
+  selectedIncident = null,
+  selectedResource = null,
+  viewMode = 'reports',
   onSelectIncident,
-  assignedLine,
-  center
+  center = [20.2975, 85.8290]
 }) {
-  const showIncidents = viewMode === 'reports' || viewMode === 'heatmap'
+  const showIncidents = !viewMode || viewMode === 'reports' || viewMode === 'heatmap'
   const showResources = viewMode === 'resources'
+
+  const incList = Array.isArray(incidents) ? incidents : (incidents?.incidents || [])
+  const resList = Array.isArray(resources) ? resources : (resources?.resources || [])
+  const shelterList = Array.isArray(shelters) ? shelters : (shelters?.shelters || [])
 
   return (
     <MapContainer center={center} zoom={12} style={{ width: '100%', height: '100%' }}>
@@ -95,85 +109,168 @@ function MapView({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <RecenterOnSelect incident={selectedIncident} />
+      <RecenterOnSelect incident={selectedIncident} resource={selectedResource} />
 
-      {/* Heatmap mode - simple concentration circles, not a real GIS heatmap */}
+      {/* Heatmap mode */}
       {viewMode === 'heatmap' &&
-        incidents.map((inc) => (
-          <Circle
-            key={`heat-${inc.id}`}
-            center={[inc.lat, inc.lng]}
-            radius={inc.severity === 'Critical' ? 900 : inc.severity === 'High' ? 650 : 400}
-            pathOptions={{
-              color: severityColor[inc.severity],
-              fillColor: severityColor[inc.severity],
-              fillOpacity: 0.25,
-              weight: 0
-            }}
-          />
-        ))}
+        incList.map((rawInc) => {
+          const lat = rawInc.lat ?? rawInc.location?.coordinates?.[1]
+          const lng = rawInc.lng ?? rawInc.location?.coordinates?.[0]
+          if (lat == null || lng == null) return null
+          const sevMap = { 5: 'Critical', 4: 'High', 3: 'Medium', 2: 'Low', 1: 'Low' }
+          const severity = typeof rawInc.severity === 'number' ? (sevMap[rawInc.severity] || 'Medium') : (rawInc.severity || 'Medium')
+          return (
+            <Circle
+              key={`heat-${rawInc.id || rawInc._id}`}
+              center={[lat, lng]}
+              radius={severity === 'Critical' ? 900 : severity === 'High' ? 650 : 400}
+              pathOptions={{
+                color: severityColor[severity] || '#5c6b7a',
+                fillColor: severityColor[severity] || '#5c6b7a',
+                fillOpacity: 0.25,
+                weight: 0
+              }}
+            />
+          )
+        })}
 
       {showIncidents &&
-        incidents.map((inc) => (
-          <Marker
-            key={inc.id}
-            position={[inc.lat, inc.lng]}
-            icon={incidentIcon(inc.severity, selectedIncident && selectedIncident.id === inc.id)}
-            eventHandlers={{ click: () => onSelectIncident(inc) }}
-          >
-            <Popup>
-              <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
-                <p style={{ fontWeight: 800, marginBottom: 4 }}>{inc.id}</p>
-                <p style={{ marginBottom: 2 }}>{inc.type}</p>
-                <p style={{ marginBottom: 4, fontWeight: 700, color: severityColor[inc.severity] }}>
-                  {inc.severity.toUpperCase()}
-                </p>
-                <p style={{ fontSize: 12, marginBottom: 4 }}>{inc.description}</p>
-                <p style={{ fontSize: 12, color: '#5c6b7a' }}>Reported: {inc.reportedTime}</p>
-                <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {inc.status}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        incList.map((rawInc) => {
+          const lat = rawInc.lat ?? rawInc.location?.coordinates?.[1]
+          const lng = rawInc.lng ?? rawInc.location?.coordinates?.[0]
+          if (lat == null || lng == null) return null
+
+          const id = rawInc.id || (rawInc._id ? `INC-${String(rawInc._id).slice(-4).toUpperCase()}` : 'INC')
+          const sevMap = { 5: 'Critical', 4: 'High', 3: 'Medium', 2: 'Low', 1: 'Low' }
+          const severity = typeof rawInc.severity === 'number' ? (sevMap[rawInc.severity] || 'Medium') : (rawInc.severity || 'Medium')
+          const type = rawInc.type ? (String(rawInc.type).charAt(0).toUpperCase() + String(rawInc.type).slice(1)) : 'Incident'
+          const status = rawInc.status === 'unallocated' ? 'Unassigned' : rawInc.status === 'allocated' ? 'Assigned' : (rawInc.status || 'Unassigned')
+          const description = rawInc.description || 'No description provided.'
+          const reportedTime = rawInc.reportedTime || (rawInc.createdAt ? new Date(rawInc.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently')
+
+          const formattedInc = {
+            ...rawInc,
+            id,
+            lat,
+            lng,
+            severity,
+            type,
+            status,
+            description,
+            reportedTime
+          }
+
+          const isSelected = selectedIncident && (selectedIncident.id === id || selectedIncident.id === rawInc.id || selectedIncident._id === rawInc._id)
+
+          return (
+            <Marker
+              key={rawInc.id || rawInc._id}
+              position={[lat, lng]}
+              icon={incidentIcon(severity, isSelected)}
+              eventHandlers={{
+                click: () => {
+                  if (onSelectIncident) {
+                    onSelectIncident(formattedInc)
+                  }
+                }
+              }}
+            >
+              <Popup>
+                <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
+                  <p style={{ fontWeight: 800, marginBottom: 4 }}>{id}</p>
+                  <p style={{ marginBottom: 2 }}>{type}</p>
+                  <p style={{ marginBottom: 4, fontWeight: 700, color: severityColor[severity] || '#5c6b7a' }}>
+                    {String(severity).toUpperCase()}
+                  </p>
+                  <p style={{ fontSize: 12, marginBottom: 4 }}>{description}</p>
+                  <p style={{ fontSize: 12, color: '#5c6b7a' }}>Reported: {reportedTime}</p>
+                  <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {status}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )
+        })}
 
       {showResources &&
-        resources.map((res) => (
-          <Marker key={res.id} position={[res.lat, res.lng]} icon={resourceIcon(res.type)}>
-            <Popup>
-              <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
-                <p style={{ fontWeight: 800, marginBottom: 4 }}>{res.id}</p>
-                <p style={{ marginBottom: 2 }}>{res.type}</p>
-                <p style={{ fontSize: 12, marginBottom: 4 }}>Capacity: {res.capacity}</p>
-                <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {res.status}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        resList.map((res) => {
+          const lat = res.lat ?? res.location?.coordinates?.[1]
+          const lng = res.lng ?? res.location?.coordinates?.[0]
+          if (lat == null || lng == null) return null
+
+          const id = res.id || res.name || (res._id ? `RES-${String(res._id).slice(-4).toUpperCase()}` : 'RES')
+          const type = res.type || 'Rescue Team'
+          const status = res.status || 'Available'
+          const capacity = res.capacity || res.shelter?.capacity_total || 'N/A'
+
+          return (
+            <Marker key={res.id || res._id} position={[lat, lng]} icon={resourceIcon(type)}>
+              <Popup>
+                <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
+                  <p style={{ fontWeight: 800, marginBottom: 4 }}>{id}</p>
+                  <p style={{ marginBottom: 2 }}>{type}</p>
+                  <p style={{ fontSize: 12, marginBottom: 4 }}>Capacity: {capacity}</p>
+                  <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {status}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )
+        })}
 
       {showResources &&
-        shelters.map((s) => (
-          <Marker key={s.id} position={[s.lat, s.lng]} icon={shelterIcon()}>
-            <Popup>
-              <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
-                <p style={{ fontWeight: 800, marginBottom: 4 }}>{s.name}</p>
-                <p style={{ fontSize: 12, marginBottom: 4 }}>
-                  {s.occupied} / {s.capacity} occupied
-                </p>
-                <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {s.status}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        shelterList.map((s) => {
+          const lat = s.lat ?? s.location?.coordinates?.[1]
+          const lng = s.lng ?? s.location?.coordinates?.[0]
+          if (lat == null || lng == null) return null
+          return (
+            <Marker key={s.id || s._id} position={[lat, lng]} icon={shelterIcon()}>
+              <Popup>
+                <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
+                  <p style={{ fontWeight: 800, marginBottom: 4 }}>{s.name}</p>
+                  <p style={{ fontSize: 12, marginBottom: 4 }}>
+                    {s.occupied || 0} / {s.capacity || s.shelter?.capacity_total || 0} occupied
+                  </p>
+                  <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {s.status || 'Available'}</p>
+                </div>
+              </Popup>
+            </Marker>
+          )
+        })}
 
-      {assignedLine && (
-        <Polyline
-          positions={[
-            [assignedLine.from.lat, assignedLine.from.lng],
-            [assignedLine.to.lat, assignedLine.to.lng]
-          ]}
-          pathOptions={{ color: '#2f6fed', weight: 3, dashArray: '6 6' }}
-        />
-      )}
+      {/* Draw connection line for each incident with an assigned resource */}
+      {incList.map((inc) => {
+        const incLat = inc.lat ?? inc.location?.coordinates?.[1]
+        const incLng = inc.lng ?? inc.location?.coordinates?.[0]
+
+        let resLat = inc.resource_location?.coordinates?.[1] ?? inc.assignedResourceLat
+        let resLng = inc.resource_location?.coordinates?.[0] ?? inc.assignedResourceLng
+
+        if (
+          (resLat == null || resLng == null) &&
+          (inc.allocated_resource_id || inc.resource_id) &&
+          resList.length > 0
+        ) {
+          const targetId = String(inc.allocated_resource_id || inc.resource_id)
+          const matchedRes = resList.find((r) => String(r._id || r.id) === targetId)
+          if (matchedRes) {
+            resLat = matchedRes.lat ?? matchedRes.location?.coordinates?.[1]
+            resLng = matchedRes.lng ?? matchedRes.location?.coordinates?.[0]
+          }
+        }
+
+        if (incLat != null && incLng != null && resLat != null && resLng != null) {
+          return (
+            <Polyline
+              key={`line-${inc.id || inc._id}`}
+              positions={[
+                [incLat, incLng],
+                [resLat, resLng]
+              ]}
+              pathOptions={{ color: '#2f6fed', weight: 3, dashArray: '6 6' }}
+            />
+          )
+        }
+        return null
+      })}
     </MapContainer>
   )
 }

@@ -8,6 +8,10 @@ const createRefreshToken = (id) => {
 }
 
 const sendAcessToken = (req, res, accesstoken) => {
+    res.cookie('accesstoken', accesstoken, {
+        httpOnly: true,
+        sameSite: 'lax',
+    });
     res.json({
         accesstoken,
         message: "Sign in sucessfull",

@@ -12,10 +12,19 @@ const severityColor = {
 
 const resourceEmoji = {
   'Rescue Team': '👨‍🚒',
+  'rescue_team': '👨‍🚒',
+  'rescue team': '👨‍🚒',
   'Ambulance': '🚑',
+  'ambulance': '🚑',
+  'medical_unit': '🏥',
+  'medical unit': '🏥',
   'Rescue Boat': '🚤',
+  'rescue_boat': '🚤',
   'Relief Supply': '📦',
-  'Shelter': '🏠'
+  'relief_supply': '📦',
+  'supply_depot': '📦',
+  'Shelter': '🏠',
+  'shelter': '🏠'
 }
 
 // Build a small colored circle icon for an incident marker
@@ -85,6 +94,40 @@ function RecenterOnSelect({ incident, resource }) {
   return null
 }
 
+function FitMapBounds({ incidents, resources, selectedIncident }) {
+  const map = useMap()
+  useEffect(() => {
+    if (selectedIncident) return
+
+    const points = []
+    
+    const incList = Array.isArray(incidents) ? incidents : (incidents?.incidents || [])
+    const resList = Array.isArray(resources) ? resources : (resources?.resources || [])
+
+    incList.forEach(inc => {
+      const lat = inc.lat ?? inc.location?.coordinates?.[1]
+      const lng = inc.lng ?? inc.location?.coordinates?.[0]
+      if (lat != null && lng != null) {
+        points.push([lat, lng])
+      }
+    })
+
+    resList.forEach(res => {
+      const lat = res.lat ?? res.location?.coordinates?.[1]
+      const lng = res.lng ?? res.location?.coordinates?.[0]
+      if (lat != null && lng != null) {
+        points.push([lat, lng])
+      }
+    })
+
+    if (points.length > 0) {
+      const bounds = L.latLngBounds(points)
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 })
+    }
+  }, [incidents, resources, selectedIncident, map])
+  return null
+}
+
 function MapView({
   incidents = [],
   resources = [],
@@ -93,10 +136,11 @@ function MapView({
   selectedResource = null,
   viewMode = 'reports',
   onSelectIncident,
+  onSelectResource,
   center = [20.2975, 85.8290]
 }) {
   const showIncidents = !viewMode || viewMode === 'reports' || viewMode === 'heatmap'
-  const showResources = viewMode === 'resources'
+  const showResources = viewMode === 'resources' || viewMode === 'reports'
 
   const incList = Array.isArray(incidents) ? incidents : (incidents?.incidents || [])
   const resList = Array.isArray(resources) ? resources : (resources?.resources || [])
@@ -110,6 +154,7 @@ function MapView({
       />
 
       <RecenterOnSelect incident={selectedIncident} resource={selectedResource} />
+      <FitMapBounds incidents={incidents} resources={resources} selectedIncident={selectedIncident} />
 
       {/* Heatmap mode */}
       {viewMode === 'heatmap' &&
@@ -230,6 +275,25 @@ function MapView({
               key={`allocated-res-${inc.id || inc._id}`}
               position={[resLat, resLng]}
               icon={resourceIcon(resType)}
+              eventHandlers={{
+                click: () => {
+                  if (onSelectResource) {
+                    const targetId = String(inc.allocated_resource_id || inc.resource_id)
+                    const matchedRes = resList.find((r) => String(r._id || r.id) === targetId)
+                    if (matchedRes) {
+                      onSelectResource(matchedRes)
+                    } else {
+                      onSelectResource({
+                        _id: targetId,
+                        name: resName,
+                        type: resType,
+                        status: 'Deployed',
+                        location: inc.resource_location
+                      })
+                    }
+                  }
+                }
+              }}
             >
               <Popup>
                 <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
@@ -244,6 +308,7 @@ function MapView({
           )
         })}
 
+      {/* List resources */}
       {showResources &&
         resList.map((res) => {
           const lat = res.lat ?? res.location?.coordinates?.[1]
@@ -256,7 +321,18 @@ function MapView({
           const capacity = res.capacity || res.shelter?.capacity_total || 'N/A'
 
           return (
-            <Marker key={res.id || res._id} position={[lat, lng]} icon={resourceIcon(type)}>
+            <Marker 
+              key={res.id || res._id} 
+              position={[lat, lng]} 
+              icon={resourceIcon(type)}
+              eventHandlers={{
+                click: () => {
+                  if (onSelectResource) {
+                    onSelectResource(res)
+                  }
+                }
+              }}
+            >
               <Popup>
                 <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
                   <p style={{ fontWeight: 800, marginBottom: 4 }}>{id}</p>

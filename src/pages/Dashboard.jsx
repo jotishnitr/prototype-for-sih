@@ -5,11 +5,10 @@ import StatsCard from '../components/StatsCard.jsx'
 import IncidentCard from '../components/IncidentCard.jsx'
 import AlertCard from '../components/AlertCard.jsx'
 import HighPriorityAlerts from '../components/HighPriorityAlerts.jsx'
+import ResourceReadiness from '../components/ResourceReadiness.jsx'
 import { io } from 'socket.io-client'
 import {
   resources as initialResources,
-  shelters,
-  supplies,
   weatherAlert
 } from '../data/mockData.js'
 
@@ -20,6 +19,7 @@ function Dashboard({ onUnauthorized }) {
   const [incidents, setIncidents] = useState(null)
   const [resources, setResources] = useState(initialResources)
   const [alerts, setAlerts] = useState([])
+  const [readinessData, setReadinessData] = useState(null)
   const [user, setUser] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [viewMode, setViewMode] = useState('reports')
@@ -143,10 +143,26 @@ function Dashboard({ onUnauthorized }) {
       }
     }
 
+    async function getReadiness() {
+      try {
+        const response = await fetch("https://resqnet-fmhd.onrender.com/api/getResourceReadiness", {
+          method: "GET",
+          credentials: "include"
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setReadinessData(data)
+        }
+      } catch (err) {
+        console.warn("Could not load resource readiness from server:", err)
+      }
+    }
+
     getStats()
     getIncidents()
     getResources()
     getAlerts()
+    getReadiness()
   }, [isVerified])
 
   // WebSocket connection for real-time alerts
@@ -236,53 +252,8 @@ function Dashboard({ onUnauthorized }) {
             />
           </div>
 
-          {/* Shelters & supplies */}
-          <div className="card" style={{ marginTop: 14, padding: 18 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }} id="shelter-grid">
-              <div>
-                <h3 style={panelTitle}>SHELTERS</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {shelters.map((s) => (
-                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
-                      <div>
-                        <p style={{ fontWeight: 600 }}>{s.name}</p>
-                        <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-                          {s.occupied} / {s.capacity} occupied
-                        </p>
-                      </div>
-                      <span className={`chip ${s.status === 'Available' ? 'chip-low' : 'chip-critical'}`}>
-                        {s.status === 'Available' ? '🟢' : '🔴'} {s.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 style={panelTitle}>RELIEF SUPPLIES</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {supplies.map((sup) => (
-                    <div key={sup.name}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                        <span>{sup.name}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>{sup.percent}%</span>
-                      </div>
-                      <div style={{ background: '#eef1f4', borderRadius: 6, height: 8 }}>
-                        <div
-                          style={{
-                            width: `${sup.percent}%`,
-                            background: sup.percent < 40 ? 'var(--red)' : sup.percent < 70 ? 'var(--orange)' : 'var(--green)',
-                            height: '100%',
-                            borderRadius: 6
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Resource Readiness */}
+          <ResourceReadiness data={readinessData} />
         </div>
 
         {/* Side panel */}

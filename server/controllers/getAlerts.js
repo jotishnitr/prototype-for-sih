@@ -28,22 +28,28 @@ const getAlerts = async (req, res) => {
 
         const incidentMap = new Map();
         incidents.forEach(incident => {
-            incidentMap.set(incident._id, incident);
+            incidentMap.set(incident._id.toString(), incident);
         });
         const resourceMap = new Map();
         resources.forEach(resource => {
-            resourceMap.set(resource._id, resource);
+            resourceMap.set(resource._id.toString(), resource);
         });
         alerts.forEach((alert) => {
             if (alert.incident_id) {
-                alert.incident_name = incidentMap.get(alert.incident_id).title;
-                alert.incident_contact = incidentMap.get(alert.incident_id).reporter_phone;
-                alert.incident_description = incidentMap.get(alert.incident_id).description;
-                alert.incident_location = incidentMap.get(alert.incident_id).location;
+                const incident = incidentMap.get(alert.incident_id.toString());
+                if (incident) {
+                    alert.incident_name = incident.title;
+                    alert.incident_contact = incident.reporter_phone;
+                    alert.incident_description = incident.description;
+                    alert.incident_location = incident.location;
+                }
             }
             if (alert.resource_id) {
-                alert.resource_name = resourceMap.get(alert.resource_id).name;
-                alert.resource_contact = resourceMap.get(alert.resource_id).contact_phone;
+                const resource = resourceMap.get(alert.resource_id.toString());
+                if (resource) {
+                    alert.resource_name = resource.name;
+                    alert.resource_contact = resource.contact_phone;
+                }
             }
         });
         return res.status(200).json({ alerts });

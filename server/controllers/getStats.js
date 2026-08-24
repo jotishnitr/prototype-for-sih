@@ -9,6 +9,9 @@ const getStats = async (req, res) => {
         const user = await User.findOne({ _id: userId });
         if (!user) return res.status(401).json({ message: 'User does not exist' });
         const jurisdictionId = user.jurisdiction_id;
+        if (!jurisdictionId) {
+            return res.status(403).json({ message: 'No jurisdiction assigned to user' });
+        }
 
         // Calculating no. of active incidents (incidents that are not resolved)
         const incidents = await Incident.find({ jurisdiction_id: jurisdictionId });
@@ -50,13 +53,18 @@ const getStats = async (req, res) => {
                 estResponse += (allocTime - incident.createdAt);
             }
         });
+        const avgResponse = userIncidents.length > 0
+            ? (estResponse / allocationMap.size) / 60000
+            : 0;
+
+        // return avgResponse not estResponse
 
         return res.status(200).json({
             activeIncidents,
             unitsDispatched,
             resources,
             shelterCapacity,
-            estResponse
+            avgResponse
         });
     } catch (error) {
         console.log(error.message);

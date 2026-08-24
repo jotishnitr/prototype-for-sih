@@ -26,15 +26,15 @@ function Dashboard({ onUnauthorized }) {
 
   const selectedIncident = (Array.isArray(incidents) && selectedId != null)
     ? incidents.find((i) => {
-        if (!i) return false
-        if (typeof selectedId === 'object' && selectedId !== null) {
-          return (i._id && selectedId._id === i._id) || (i.id && selectedId.id === i.id)
-        }
-        const idStr = String(i._id || i.id || '')
-        const formattedIncId = i._id ? `INC-${String(i._id).slice(-4).toUpperCase()}` : ''
-        const targetIdStr = String(selectedId)
-        return idStr === targetIdStr || formattedIncId === targetIdStr
-      }) || (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
+      if (!i) return false
+      if (typeof selectedId === 'object' && selectedId !== null) {
+        return (i._id && selectedId._id === i._id) || (i.id && selectedId.id === i.id)
+      }
+      const idStr = String(i._id || i.id || '')
+      const formattedIncId = i._id ? `INC-${String(i._id).slice(-4).toUpperCase()}` : ''
+      const targetIdStr = String(selectedId)
+      return idStr === targetIdStr || formattedIncId === targetIdStr
+    }) || (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
     : (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
 
   const [activeCount, setActiveCount] = useState(0)
@@ -83,7 +83,7 @@ function Dashboard({ onUnauthorized }) {
           setUnitsDispatched(data.unitsDispatched ?? 0)
           setTotalUnits(data.resources?.length || 0)
           setShelterCapacity(data.shelterCapacity ?? 0)
-          setEstResponse(data.estResponse ?? 0)
+          setEstResponse(data.avgResponse ?? 0)
         }
       } catch (err) {
         console.warn("Could not load live stats from server:", err)

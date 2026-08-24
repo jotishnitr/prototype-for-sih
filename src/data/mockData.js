@@ -1,4 +1,4 @@
-// Mock data for ResQGrid prototype
+// Mock data for ResQNet prototype
 // In a real deployment this would come from a backend API
 
 export const incidents = [

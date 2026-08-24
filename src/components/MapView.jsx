@@ -128,6 +128,51 @@ function FitMapBounds({ incidents, resources, selectedIncident }) {
   return null
 }
 
+function renderResourcePopupContent(res, incName) {
+  const id = res.name || res.id || (res._id ? `RES-${String(res._id).slice(-4).toUpperCase()}` : 'RES')
+  const typeLabel = res.type 
+    ? res.type.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()) 
+    : 'Resource'
+  const status = res.status || 'Available'
+  
+  // Capacity/readiness
+  let capacityInfo = null
+  if (res.type === 'shelter' && res.shelter) {
+    capacityInfo = `Capacity: ${res.shelter.capacity_remaining} / ${res.shelter.capacity_total} vacant`
+  } else if (res.type === 'rescue_team' && res.rescue_team) {
+    capacityInfo = `Members: ${res.rescue_team.available_members} / ${res.rescue_team.total_members} ready`
+  } else if (res.type === 'medical_unit' && res.medical_unit) {
+    capacityInfo = `Ambulances: ${res.medical_unit.available_ambulances} | Beds: ${res.medical_unit.available_beds}`
+  } else if (res.type === 'supply_depot' && res.supply_depot) {
+    capacityInfo = `Food: ${res.supply_depot.available_food_packets} | Water: ${res.supply_depot.available_water_litres}L`
+  }
+
+  const address = res.location?.address || res.address
+  const phone = res.location?.contact_phone || res.contact_phone
+
+  return (
+    <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160, fontSize: '12px', lineHeight: '1.4' }}>
+      <p style={{ fontWeight: 800, fontSize: '13px', margin: '0 0 4px 0', color: 'var(--navy)' }}>🔵 {id}</p>
+      <p style={{ margin: '0 0 2px 0', color: 'var(--text-muted)' }}>Type: {typeLabel}</p>
+      <p style={{ margin: '0 0 4px 0', fontWeight: 600 }}>Status: {status}</p>
+      
+      {capacityInfo && (
+        <p style={{ margin: '4px 0', background: 'var(--bg)', padding: '4px 6px', borderRadius: 4 }}>
+          📈 {capacityInfo}
+        </p>
+      )}
+      {address && <p style={{ margin: '2px 0', color: '#5c6b7a' }}>📍 {address}</p>}
+      {phone && <p style={{ margin: '2px 0', color: '#5c6b7a' }}>📞 {phone}</p>}
+      
+      {incName && (
+        <p style={{ fontSize: '11px', color: 'var(--blue)', fontWeight: 700, marginTop: '6px', borderTop: '1px solid var(--border)', paddingTop: '6px' }}>
+          Assigned to {incName}
+        </p>
+      )}
+    </div>
+  )
+}
+
 function MapView({
   incidents = [],
   resources = [],
@@ -252,20 +297,21 @@ function MapView({
         incList.map((inc) => {
           if (!inc.allocated_resource_id && !inc.resource_id && !inc.resource_name) return null
 
+          const targetId = String(inc.allocated_resource_id || inc.resource_id || '')
+          const matchedRes = (resList.length > 0 && targetId)
+            ? resList.find((r) => String(r._id || r.id) === targetId)
+            : null
+
           let resLat = inc.resource_location?.coordinates?.[1] ?? inc.assignedResourceLat
           let resLng = inc.resource_location?.coordinates?.[0] ?? inc.assignedResourceLng
           let resName = inc.resource_name || 'Allocated Resource'
           let resType = inc.resource_type || 'Rescue Team'
 
-          if ((resLat == null || resLng == null) && resList.length > 0) {
-            const targetId = String(inc.allocated_resource_id || inc.resource_id)
-            const matchedRes = resList.find((r) => String(r._id || r.id) === targetId)
-            if (matchedRes) {
-              resLat = matchedRes.lat ?? matchedRes.location?.coordinates?.[1]
-              resLng = matchedRes.lng ?? matchedRes.location?.coordinates?.[0]
-              resName = matchedRes.name || matchedRes.id || resName
-              resType = matchedRes.type || resType
-            }
+          if (matchedRes) {
+            resLat = resLat ?? matchedRes.lat ?? matchedRes.location?.coordinates?.[1]
+            resLng = resLng ?? matchedRes.lng ?? matchedRes.location?.coordinates?.[0]
+            resName = matchedRes.name || matchedRes.id || resName
+            resType = matchedRes.type || resType
           }
 
           if (resLat == null || resLng == null) return null
@@ -296,13 +342,15 @@ function MapView({
               }}
             >
               <Popup>
-                <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
-                  <p style={{ fontWeight: 800, marginBottom: 4 }}>🔵 {resName}</p>
-                  <p style={{ fontSize: 12, marginBottom: 2 }}>Type: {resType}</p>
-                  <p style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 700 }}>
-                    Assigned to {inc.id || (inc._id ? `INC-${String(inc._id).slice(-4).toUpperCase()}` : 'Incident')}
-                  </p>
-                </div>
+                {renderResourcePopupContent(
+                  matchedRes || {
+                    name: resName,
+                    type: resType,
+                    status: 'Deployed',
+                    location: inc.resource_location
+                  },
+                  inc.id || (inc._id ? `INC-${String(inc._id).slice(-4).toUpperCase()}` : 'Incident')
+                )}
               </Popup>
             </Marker>
           )
@@ -334,12 +382,7 @@ function MapView({
               }}
             >
               <Popup>
-                <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
-                  <p style={{ fontWeight: 800, marginBottom: 4 }}>{id}</p>
-                  <p style={{ marginBottom: 2 }}>{type}</p>
-                  <p style={{ fontSize: 12, marginBottom: 4 }}>Capacity: {capacity}</p>
-                  <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {status}</p>
-                </div>
+                {renderResourcePopupContent(res)}
               </Popup>
             </Marker>
           )

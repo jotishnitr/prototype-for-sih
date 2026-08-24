@@ -14,7 +14,7 @@ function Home() {
               Real-Time Disaster Response, Connected.
             </h1>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, marginBottom: 30, maxWidth: 480 }}>
-              ResQGrid connects citizen reports, emergency resources and authorities through
+              ResQNet connects citizen reports, emergency resources and authorities through
               one live disaster-response platform.
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
@@ -58,9 +58,9 @@ function Home() {
       <section id="about" style={{ padding: '0 0 64px' }}>
         <div className="container card" style={{ padding: 28, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ maxWidth: 560 }}>
-            <h2 style={{ fontSize: 20, marginBottom: 8 }}>About ResQGrid</h2>
+            <h2 style={{ fontSize: 20, marginBottom: 8 }}>About ResQNet</h2>
             <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              ResQGrid is a hackathon prototype built for PS-05: Real-Time Disaster Early-Warning
+              ResQNet is a hackathon prototype built for PS-05: Real-Time Disaster Early-Warning
               and Resource Coordination Platform. It links citizen incident reports with a live
               map and helps authorities assign the nearest available team, ambulance, boat, or
               shelter to each incident.

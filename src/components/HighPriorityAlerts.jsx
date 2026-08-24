@@ -81,7 +81,7 @@ const getAlertConfig = (type, severity, title) => {
   }
 }
 
-function HighPriorityAlerts({ alerts }) {
+function HighPriorityAlerts({ alerts, onViewAllLogs }) {
   const [ticker, setTicker] = useState(0)
 
   // Force component update every 15s to update "time ago" stamps
@@ -110,6 +110,7 @@ function HighPriorityAlerts({ alerts }) {
       <div style={listStyle} className="custom-scrollbar">
         {alerts && alerts.length > 0 ? (
           alerts.map((alert) => {
+            if (!alert) return null
             const config = getAlertConfig(alert.type, alert.severity, alert.title)
             return (
               <div 
@@ -147,9 +148,25 @@ function HighPriorityAlerts({ alerts }) {
 
       {/* Bottom View Logs link */}
       <div style={bottomContainerStyle}>
-        <a href="#logs" style={viewLogsLinkStyle}>
+        <button 
+          onClick={(e) => {
+            e.preventDefault()
+            if (onViewAllLogs) onViewAllLogs()
+          }} 
+          style={{
+            background: 'none',
+            border: 'none',
+            fontFamily: 'inherit',
+            fontSize: '12px',
+            fontWeight: '700',
+            color: 'var(--navy)',
+            letterSpacing: '0.05em',
+            cursor: 'pointer',
+            padding: 0
+          }}
+        >
           VIEW ALL LOGS
-        </a>
+        </button>
       </div>
 
       {/* Inline styles for scrolling and animations */}

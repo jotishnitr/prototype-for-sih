@@ -1,4 +1,4 @@
-# ResQGrid
+# ResQNet
 
 Real-Time Disaster Early-Warning & Resource Coordination Platform (Hackathon PS-05 prototype).
 

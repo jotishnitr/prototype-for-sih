@@ -16,7 +16,7 @@ function Navbar() {
       <div className="container" style={styles.inner}>
         <Link to="/" style={styles.logo}>
           <span style={styles.logoMark}>RQ</span>
-          ResQGrid
+          ResQNet
         </Link>
 
         <nav style={styles.nav} className={`navbar-links${open ? ' open' : ''}`}>

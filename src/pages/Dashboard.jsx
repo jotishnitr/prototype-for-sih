@@ -42,6 +42,7 @@ function Dashboard({ onUnauthorized }) {
   const [allocating, setAllocating] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [fetchingLocation, setFetchingLocation] = useState(false)
+  const [showLogsModal, setShowLogsModal] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     type: 'rescue_team',
@@ -217,7 +218,38 @@ function Dashboard({ onUnauthorized }) {
 
     socket.on('alert:new', (newAlert) => {
       console.log('New alert received:', newAlert)
-      setAlerts((prevAlerts) => [newAlert, ...prevAlerts])
+      if (newAlert) {
+        const targetId = newAlert._id || newAlert.id
+        setAlerts((prevAlerts) => {
+          const exists = prevAlerts.some(a => (a._id || a.id) === targetId)
+          if (exists) {
+            return prevAlerts.map(a => (a._id || a.id) === targetId ? newAlert : a)
+          } else {
+            return [newAlert, ...prevAlerts]
+          }
+        })
+      }
+    })
+
+    socket.on('resource:new', (newResource) => {
+      console.log('New resource received:', newResource)
+      if (newResource) {
+        setResources((prev) => {
+          const exists = prev.some(r => (r._id || r.id) === (newResource._id || newResource.id))
+          if (exists) return prev
+          return [newResource, ...prev]
+        })
+        getStats()
+        getReadiness()
+      }
+    })
+
+    socket.on('allocation:created', (allocation) => {
+      console.log('Allocation created event received:', allocation)
+      getStats()
+      getIncidents()
+      getResources()
+      getReadiness()
     })
 
     socket.on('disconnect', () => {
@@ -510,7 +542,11 @@ function Dashboard({ onUnauthorized }) {
           <StatsCard label="Active Incidents" value={activeCount} accent="var(--red)" />
           <StatsCard label="Units Dispatched" value={`${unitsDispatched}/${totalUnits}`} accent="var(--blue)" />
           <StatsCard label="Shelter Occupancy" value={shelterCapacity} accent="var(--orange)" />
-          <StatsCard label="Est. Response" value={estResponse} accent="var(--green)" />
+          <StatsCard 
+            label="Est. Response" 
+            value={typeof estResponse === 'number' ? `${estResponse.toFixed(1)} mins` : `${parseFloat(estResponse || 0).toFixed(1)} mins`} 
+            accent="var(--green)" 
+          />
         </div>
       </div>
 
@@ -667,7 +703,7 @@ function Dashboard({ onUnauthorized }) {
           )}
 
           <AlertCard alert={weatherAlert} />
-          <HighPriorityAlerts alerts={alerts} />
+          <HighPriorityAlerts alerts={alerts} onViewAllLogs={() => setShowLogsModal(true)} />
         </div>
       </div>
 
@@ -980,6 +1016,118 @@ function Dashboard({ onUnauthorized }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Logs History Modal */}
+      {showLogsModal && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, maxWidth: '750px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: 'var(--navy)' }}>
+                📋 All System Alert Logs
+              </h3>
+              <button 
+                onClick={() => setShowLogsModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '4px' }} className="custom-scrollbar">
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                    <th style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--text-muted)' }}>Time</th>
+                    <th style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--text-muted)' }}>Type</th>
+                    <th style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--text-muted)' }}>Message / Title</th>
+                    <th style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--text-muted)' }}>Severity</th>
+                    <th style={{ padding: '10px 12px', fontWeight: '700', color: 'var(--text-muted)' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alerts && alerts.length > 0 ? (
+                    alerts.map((al, idx) => {
+                      if (!al) return null
+                      const timeStr = new Date(al.createdAt || al.timestamp).toLocaleString([], {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })
+                      
+                      let severityLabel = 'Low'
+                      let severityColor = 'var(--blue)'
+                      if (al.severity === 'critical' || al.severity === 'high' || al.severity >= 4) {
+                        severityLabel = 'Critical'
+                        severityColor = 'var(--red)'
+                      } else if (al.severity === 'warning' || al.severity === 'medium' || al.severity >= 2) {
+                        severityLabel = 'Medium'
+                        severityColor = 'var(--orange)'
+                      }
+
+                      return (
+                        <tr key={al._id || al.id || idx} style={{ borderBottom: '1px solid var(--border)', background: idx % 2 === 0 ? 'var(--bg)' : 'transparent' }}>
+                          <td style={{ padding: '12px 12px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontSize: '12px' }}>{timeStr}</td>
+                          <td style={{ padding: '12px 12px', fontWeight: '700', textTransform: 'uppercase', color: severityColor, fontSize: '11px' }}>
+                            {al.type ? al.type.replace('_', ' ') : 'ALERT'}
+                          </td>
+                          <td style={{ padding: '12px 12px', lineHeight: '1.4' }}>
+                            <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{al.title}</div>
+                            {al.message && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{al.message}</div>}
+                          </td>
+                          <td style={{ padding: '12px 12px' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '2px 6px',
+                              borderRadius: '3px',
+                              fontSize: '10px',
+                              fontWeight: '800',
+                              background: severityColor === 'var(--red)' ? 'var(--red-bg)' : (severityColor === 'var(--orange)' ? 'var(--orange-bg)' : 'var(--blue-bg)'),
+                              color: severityColor
+                            }}>
+                              {severityLabel}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 12px' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '2px 6px',
+                              borderRadius: '3px',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              background: al.status === 'allocated' || al.status === 'resolved' ? 'var(--green-bg)' : 'rgba(0,0,0,0.05)',
+                              color: al.status === 'allocated' || al.status === 'resolved' ? 'var(--green)' : 'var(--text-muted)'
+                            }}>
+                              {al.status || 'Active'}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        No logs available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+              <button 
+                onClick={() => setShowLogsModal(false)}
+                className="btn btn-outline"
+                style={{ padding: '8px 20px', fontSize: '13px' }}
+              >
+                Close Logs
+              </button>
+            </div>
           </div>
         </div>
       )}

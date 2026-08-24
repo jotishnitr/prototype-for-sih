@@ -185,6 +185,59 @@ function MapView({
                   <p style={{ fontSize: 12, marginBottom: 4 }}>{description}</p>
                   <p style={{ fontSize: 12, color: '#5c6b7a' }}>Reported: {reportedTime}</p>
                   <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {status}</p>
+                  {rawInc.resource_name && (
+                    <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid #eef1f4' }}>
+                      <p style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 700 }}>
+                        🚒 Allocated Resource:
+                      </p>
+                      <p style={{ fontSize: 12, fontWeight: 600 }}>{rawInc.resource_name}</p>
+                      {rawInc.resource_type && (
+                        <p style={{ fontSize: 11, color: '#5c6b7a' }}>Type: {rawInc.resource_type}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          )
+        })}
+
+      {/* Allocated resources for incidents (shown in reports view as well) */}
+      {showIncidents &&
+        incList.map((inc) => {
+          if (!inc.allocated_resource_id && !inc.resource_id && !inc.resource_name) return null
+
+          let resLat = inc.resource_location?.coordinates?.[1] ?? inc.assignedResourceLat
+          let resLng = inc.resource_location?.coordinates?.[0] ?? inc.assignedResourceLng
+          let resName = inc.resource_name || 'Allocated Resource'
+          let resType = inc.resource_type || 'Rescue Team'
+
+          if ((resLat == null || resLng == null) && resList.length > 0) {
+            const targetId = String(inc.allocated_resource_id || inc.resource_id)
+            const matchedRes = resList.find((r) => String(r._id || r.id) === targetId)
+            if (matchedRes) {
+              resLat = matchedRes.lat ?? matchedRes.location?.coordinates?.[1]
+              resLng = matchedRes.lng ?? matchedRes.location?.coordinates?.[0]
+              resName = matchedRes.name || matchedRes.id || resName
+              resType = matchedRes.type || resType
+            }
+          }
+
+          if (resLat == null || resLng == null) return null
+
+          return (
+            <Marker
+              key={`allocated-res-${inc.id || inc._id}`}
+              position={[resLat, resLng]}
+              icon={resourceIcon(resType)}
+            >
+              <Popup>
+                <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
+                  <p style={{ fontWeight: 800, marginBottom: 4 }}>🔵 {resName}</p>
+                  <p style={{ fontSize: 12, marginBottom: 2 }}>Type: {resType}</p>
+                  <p style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 700 }}>
+                    Assigned to {inc.id || (inc._id ? `INC-${String(inc._id).slice(-4).toUpperCase()}` : 'Incident')}
+                  </p>
                 </div>
               </Popup>
             </Marker>
@@ -236,7 +289,7 @@ function MapView({
           )
         })}
 
-      {/* Draw connection line for each incident with an assigned resource */}
+      {/* Connection line between each assigned incident and its allocated resource */}
       {incList.map((inc) => {
         const incLat = inc.lat ?? inc.location?.coordinates?.[1]
         const incLng = inc.lng ?? inc.location?.coordinates?.[0]

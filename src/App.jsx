@@ -23,7 +23,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
-        <Route path="/report" element={<ReportIncident user={user} setUser={setUser} />} />
+        <Route path="/report" element={<ReportIncident />} />
         <Route
           path="/dashboard"
           element={<Dashboard onUnauthorized={handleLogout} />}

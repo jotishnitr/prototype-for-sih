@@ -24,9 +24,18 @@ function Dashboard({ onUnauthorized }) {
   const [selectedId, setSelectedId] = useState(null)
   const [viewMode, setViewMode] = useState('reports')
 
-  const selectedIncident = Array.isArray(incidents)
-    ? incidents.find((i) => i.id === selectedId || i._id === selectedId)
-    : null
+  const selectedIncident = (Array.isArray(incidents) && selectedId != null)
+    ? incidents.find((i) => {
+        if (!i) return false
+        if (typeof selectedId === 'object' && selectedId !== null) {
+          return (i._id && selectedId._id === i._id) || (i.id && selectedId.id === i.id)
+        }
+        const idStr = String(i._id || i.id || '')
+        const formattedIncId = i._id ? `INC-${String(i._id).slice(-4).toUpperCase()}` : ''
+        const targetIdStr = String(selectedId)
+        return idStr === targetIdStr || formattedIncId === targetIdStr
+      }) || (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
+    : (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
 
   const [activeCount, setActiveCount] = useState(0)
   const [unitsDispatched, setUnitsDispatched] = useState(0)

@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const postIncident = require('../controllers/postIncident');
-const auth = require('../middlewares/auth');
 
-router.route('/postIncident').post(auth, postIncident);
+// Public route to allow anyone to submit emergency incident reports
+router.route('/postIncident').post(postIncident);
+
 module.exports = router;

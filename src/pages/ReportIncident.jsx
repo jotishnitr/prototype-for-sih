@@ -1,43 +1,35 @@
 import { useState } from 'react'
-import Login from './Login.jsx'
 
-// list of incident types for the dropdown
 const incidentTypes = [
-  'Flood',
-  'Person Trapped',
-  'Medical Emergency',
-  'Road Blockage',
-  'Building Damage',
-  'Landslide',
-  'Other'
+  { label: 'Flood', value: 'flood' },
+  { label: 'Landslide', value: 'landslide' },
+  { label: 'Cyclone', value: 'cyclone' },
+  { label: 'Medical Emergency', value: 'medical' },
+  { label: 'Fire', value: 'fire' },
+  { label: 'Other', value: 'flood' }
 ]
 
-// severity options, just a plain array of objects
 const severityOptions = [
-  { value: 'Low', emoji: '🟢' },
-  { value: 'Medium', emoji: '🟡' },
-  { value: 'High', emoji: '🟠' },
-  { value: 'Critical', emoji: '🔴' }
+  { label: 'Level 1', value: 1, emoji: '🟢' },
+  { label: 'Level 2', value: 2, emoji: '🟢' },
+  { label: 'Level 3', value: 3, emoji: '🟡' },
+  { label: 'Level 4', value: 4, emoji: '🟠' },
+  { label: 'Level 5', value: 5, emoji: '🔴' }
 ]
 
-function ReportIncident({ user, setUser }) {
-  // form fields
+function ReportIncident() {
   const [location, setLocation] = useState(null)
   const [locError, setLocError] = useState('')
   const [type, setType] = useState('')
   const [severity, setSeverity] = useState('')
+  const [address, setAddress] = useState('')
+  const [reporterPhone, setReporterPhone] = useState('')
   const [description, setDescription] = useState('')
   const [photo, setPhoto] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-
-  // fake incident id for the demo, this would come from the backend normally
-  const incidentId = 'INC-1042'
-
-  // if user is not logged in yet, show the login page first
-  // this is a very simple way to "protect" the report page
-  if (!user) {
-    return <Login onLogin={setUser} />
-  }
+  const [createdIncidentId, setCreatedIncidentId] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
 
   function useMyLocation() {
     setLocError('')
@@ -55,23 +47,64 @@ function ReportIncident({ user, setUser }) {
         })
       },
       function () {
-        // if the user says no to location, just use a sample one for the demo
-        setLocError('Could not access location. Using a sample location for the demo.')
+        setLocError('Could not access location. Using default location.')
         setLocation({ lat: '20.2961', lng: '85.8245' })
       }
     )
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
 
-    // not doing any real validation here, keeping it simple
-    if (type === '' || severity === '') {
+    if (!type || !severity) {
       alert('Please select incident type and severity')
       return
     }
 
-    setSubmitted(true)
+    setSubmitting(true)
+    setErrorMsg('')
+
+    const lngVal = location?.lng ? parseFloat(location.lng) : 85.8245
+    const latVal = location?.lat ? parseFloat(location.lat) : 20.2961
+
+    const payload = {
+      type: type,
+      severity: Number(severity),
+      location: {
+        type: 'Point',
+        coordinates: [lngVal, latVal]
+      },
+      address: address || 'Bhubaneswar, Odisha',
+      description: description,
+      reporter_phone: reporterPhone || ''
+    }
+
+    try {
+      const response = await fetch("https://resqnet-fmhd.onrender.com/api/postIncident", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        const newId = data.incident?._id
+          ? `INC-${String(data.incident._id).slice(-4).toUpperCase()}`
+          : 'INC-SUCCESS'
+        setCreatedIncidentId(newId)
+        setSubmitted(true)
+      } else {
+        setErrorMsg(data.message || 'Failed to submit report. Please try again.')
+      }
+    } catch (err) {
+      console.error("Post incident error:", err)
+      setErrorMsg('Network error. Failed to reach disaster server.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function resetForm() {
@@ -79,22 +112,26 @@ function ReportIncident({ user, setUser }) {
     setLocation(null)
     setType('')
     setSeverity('')
+    setAddress('')
+    setReporterPhone('')
     setDescription('')
     setPhoto(null)
+    setErrorMsg('')
   }
 
-  // success screen after submitting
   if (submitted) {
     return (
       <main className="container" style={{ maxWidth: 560, padding: '64px 24px', textAlign: 'center' }}>
         <div className="card" style={{ padding: 36 }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-          <h2 style={{ fontSize: 22, marginBottom: 8 }}>Report Received</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>Incident ID: {incidentId}</p>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
-            Your report has been sent to the disaster response dashboard.
+          <h2 style={{ fontSize: 22, marginBottom: 8 }}>Emergency Report Received</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>
+            Incident ID: <strong>{createdIncidentId}</strong>
           </p>
-          <button className="btn btn-secondary" onClick={resetForm}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 24 }}>
+            Your report has been submitted to the Authority Control Center and live disaster dashboard.
+          </p>
+          <button className="btn btn-primary" onClick={resetForm}>
             Submit Another Report
           </button>
         </div>
@@ -106,20 +143,24 @@ function ReportIncident({ user, setUser }) {
     <main className="container" style={{ maxWidth: 640, padding: '48px 24px 64px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10, marginBottom: 6 }}>
         <div>
-          <h1 style={{ fontSize: 26, marginBottom: 6 }}>Report an Incident</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Help authorities understand what is happening around you.</p>
+          <h1 style={{ fontSize: 26, marginBottom: 6 }}>Report an Emergency Incident</h1>
+          <p style={{ color: 'var(--text-muted)' }}>Public Emergency Hotline - Help authorities dispatch response teams quickly.</p>
         </div>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          Signed in as <b>{user.name}</b>
-        </p>
+        <span className="chip chip-low">🌐 Open Public Access</span>
       </div>
 
-      <form onSubmit={handleSubmit} className="card" style={{ padding: 26, marginTop: 22, display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <form onSubmit={handleSubmit} className="card" style={{ padding: 26, marginTop: 22, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {errorMsg && (
+          <div style={{ background: '#ffeeee', border: '1px solid var(--red)', padding: 12, borderRadius: 6, color: 'var(--red)', fontSize: 13 }}>
+            {errorMsg}
+          </div>
+        )}
+
         {/* Location */}
         <div>
-          <label style={labelStyle}>Location</label>
+          <label style={labelStyle}>Incident Location</label>
           <button type="button" className="btn btn-outline btn-small" onClick={useMyLocation}>
-            📍 Use My Location
+            📍 Use My Current Location
           </button>
           {location && (
             <p style={{ fontSize: 13, marginTop: 8, color: 'var(--text-muted)' }}>
@@ -127,6 +168,30 @@ function ReportIncident({ user, setUser }) {
             </p>
           )}
           {locError !== '' && <p style={{ fontSize: 12, marginTop: 6, color: 'var(--orange)' }}>{locError}</p>}
+        </div>
+
+        {/* Address / Landmark */}
+        <div>
+          <label style={labelStyle}>Address / Landmark</label>
+          <input
+            type="text"
+            placeholder="e.g. Near River Bank, Sector B, Bhubaneswar"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            style={selectStyle}
+          />
+        </div>
+
+        {/* Reporter Phone */}
+        <div>
+          <label style={labelStyle}>Contact Phone Number (Optional)</label>
+          <input
+            type="tel"
+            placeholder="e.g. +91 9876543210"
+            value={reporterPhone}
+            onChange={(e) => setReporterPhone(e.target.value)}
+            style={selectStyle}
+          />
         </div>
 
         {/* Incident type */}
@@ -137,8 +202,8 @@ function ReportIncident({ user, setUser }) {
               Select incident type
             </option>
             {incidentTypes.map((t) => (
-              <option key={t} value={t}>
-                {t}
+              <option key={t.label} value={t.value}>
+                {t.label}
               </option>
             ))}
           </select>
@@ -146,12 +211,12 @@ function ReportIncident({ user, setUser }) {
 
         {/* Severity */}
         <div>
-          <label style={labelStyle}>Severity</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+          <label style={labelStyle}>Severity Level</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
             {severityOptions.map((s) => (
               <button
                 type="button"
-                key={s.value}
+                key={s.label}
                 onClick={() => setSeverity(s.value)}
                 style={{
                   padding: '14px 8px',
@@ -164,7 +229,7 @@ function ReportIncident({ user, setUser }) {
                 }}
               >
                 <div style={{ fontSize: 20, marginBottom: 4 }}>{s.emoji}</div>
-                {s.value}
+                {s.label}
               </button>
             ))}
           </div>
@@ -176,7 +241,7 @@ function ReportIncident({ user, setUser }) {
           <textarea
             required
             rows={4}
-            placeholder="Describe the situation briefly…"
+            placeholder="Describe the emergency situation (e.g. trapped individuals, water level)..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             style={{ ...selectStyle, resize: 'vertical', fontFamily: 'inherit' }}
@@ -185,7 +250,7 @@ function ReportIncident({ user, setUser }) {
 
         {/* Photo */}
         <div>
-          <label style={labelStyle}>Photo (optional)</label>
+          <label style={labelStyle}>Photo Attachment (optional)</label>
           <input
             type="file"
             accept="image/*"
@@ -195,8 +260,8 @@ function ReportIncident({ user, setUser }) {
           {photo && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{photo.name} selected</p>}
         </div>
 
-        <button type="submit" className="btn btn-primary btn-full">
-          Submit Emergency Report
+        <button type="submit" className="btn btn-primary btn-full" disabled={submitting}>
+          {submitting ? 'Submitting Report...' : 'Submit Emergency Report'}
         </button>
       </form>
     </main>

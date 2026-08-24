@@ -6,7 +6,7 @@ const Resource = require('../models/Resource');
 
 const getAlerts = async (req, res) => {
     try {
-        const { user_id } = req.body;
+        const user_id = req.user?.id || req.body?.user_id;
 
         const user = await User.findById(user_id);
         if (!user) {

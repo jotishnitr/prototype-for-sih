@@ -4,23 +4,23 @@ import MapView from '../components/MapView.jsx'
 import StatsCard from '../components/StatsCard.jsx'
 import IncidentCard from '../components/IncidentCard.jsx'
 import AlertCard from '../components/AlertCard.jsx'
-import ActivityFeed from '../components/ActivityFeed.jsx'
+import HighPriorityAlerts from '../components/HighPriorityAlerts.jsx'
+import { io } from 'socket.io-client'
 import {
   resources as initialResources,
   shelters,
   supplies,
-  weatherAlert,
-  activityFeedSeed
+  weatherAlert
 } from '../data/mockData.js'
 
-const MAP_CENTER = [20.2975, 85.8290]
 
 function Dashboard({ onUnauthorized }) {
   const navigate = useNavigate()
 
   const [incidents, setIncidents] = useState(null)
   const [resources, setResources] = useState(initialResources)
-  const [activity, setActivity] = useState(activityFeedSeed)
+  const [alerts, setAlerts] = useState([])
+  const [user, setUser] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [viewMode, setViewMode] = useState('reports')
 
@@ -57,6 +57,8 @@ function Dashboard({ onUnauthorized }) {
           navigate('/login', { replace: true })
           return
         }
+        const data = await response.json()
+        setUser(data.user)
         setIsVerified(true)
       } catch (err) {
         console.error("User verification failed:", err)
@@ -126,10 +128,51 @@ function Dashboard({ onUnauthorized }) {
       }
     }
 
+    async function getAlerts() {
+      try {
+        const response = await fetch("https://resqnet-fmhd.onrender.com/api/getAlerts", {
+          method: "GET",
+          credentials: "include"
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setAlerts(data.alerts || [])
+        }
+      } catch (err) {
+        console.warn("Could not load live alerts from server:", err)
+      }
+    }
+
     getStats()
     getIncidents()
     getResources()
+    getAlerts()
   }, [isVerified])
+
+  // WebSocket connection for real-time alerts
+  useEffect(() => {
+    if (!isVerified || !user || !user.jurisdiction_id) return
+
+    const socket = io("https://resqnet-fmhd.onrender.com")
+
+    socket.on('connect', () => {
+      console.log('Socket.io connected:', socket.id)
+      socket.emit('join:jurisdiction', user.jurisdiction_id)
+    })
+
+    socket.on('alert:new', (newAlert) => {
+      console.log('New alert received:', newAlert)
+      setAlerts((prevAlerts) => [newAlert, ...prevAlerts])
+    })
+
+    socket.on('disconnect', () => {
+      console.log('Socket.io disconnected')
+    })
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [isVerified, user])
 
   function selectIncident(inc) {
     setSelectedId(inc.id || inc._id)
@@ -186,7 +229,10 @@ function Dashboard({ onUnauthorized }) {
               selectedIncident={selectedIncident}
               viewMode={viewMode}
               onSelectIncident={selectIncident}
-              center={MAP_CENTER}
+              center={
+                incidents && incidents.length > 0 && incidents[0].location?.coordinates
+                  ? [incidents[0].location.coordinates[1], incidents[0].location.coordinates[0]]
+                  : [22.2528, 84.9119]}
             />
           </div>
 
@@ -264,7 +310,7 @@ function Dashboard({ onUnauthorized }) {
           )}
 
           <AlertCard alert={weatherAlert} />
-          <ActivityFeed items={activity} />
+          <HighPriorityAlerts alerts={alerts} />
         </div>
       </div>
 

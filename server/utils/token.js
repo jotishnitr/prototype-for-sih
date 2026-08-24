@@ -10,19 +10,22 @@ const createRefreshToken = (id) => {
 const sendAcessToken = (req, res, accesstoken) => {
     res.cookie('accesstoken', accesstoken, {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'none',
+        secure: true
     });
     res.json({
         accesstoken,
         message: "Sign in sucessfull",
         type: "success",
     });
-
 }
 
 const sendRefreshToken = (res, refreshtoken) => {
     res.cookie('refreshtoken', refreshtoken, {
         httpOnly: true,
-    })
+        sameSite: 'none',
+        secure: true
+    });
 }
+
 module.exports = { createAcessToken, createRefreshToken, sendAcessToken, sendRefreshToken }

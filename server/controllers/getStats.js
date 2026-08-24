@@ -10,15 +10,15 @@ const getStats = async (req, res) => {
         if (!user) return res.status(401).json({ message: 'User does not exist' });
         const jurisdictionId = user.jurisdiction_id;
 
-        // Calculating no.of active incidents
+        // Calculating no. of active incidents (incidents that are not resolved)
         const incidents = await Incident.find({ jurisdiction_id: jurisdictionId });
-        const activeIncidents = incidents.filter((incident) => incident.status === 'active').length;
+        const activeIncidents = incidents.filter((incident) => incident.status !== 'resolved').length;
 
-        // calculating no.of units dispatched
+        // calculating no. of units dispatched
         const resources = await Resource.find({ jurisdiction_id: jurisdictionId });
         const unitsDispatched = resources.filter((resource) => resource.status === 'deployed').length;
 
-        //calculating shelter capacity
+        // calculating shelter capacity
         const shelters = await Resource.find({ jurisdiction_id: jurisdictionId, type: 'shelter' });
         let totalCapacity = 0;
         let remainingCapacity = 0;
@@ -30,7 +30,7 @@ const getStats = async (req, res) => {
         })
         const shelterCapacity = totalCapacity - remainingCapacity;
 
-        //calculating estResponse ( T.C - O(2n) )
+        // calculating estResponse ( T.C - O(2n) )
         const userIncidents = await Incident.find({ jurisdiction_id: jurisdictionId })
         const userAllocations = await Allocation.find({ jurisdiction_id: jurisdictionId })
 

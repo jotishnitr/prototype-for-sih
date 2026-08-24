@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const incidentSchema = new mongoose.Schema({
     type: { type: String, enum: ['flood', 'landslide', 'cyclone', 'medical', 'fire'], required: true },
-    severity: { type: Number, min: 1, max: 5, required: true },
+    severity: { type: Number, min: 1, max: 5 },
     description: String,
     photo_url: String,
     reporter_phone: String,

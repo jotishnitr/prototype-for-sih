@@ -56,8 +56,8 @@ function ReportIncident() {
   async function handleSubmit(e) {
     e.preventDefault()
 
-    if (!type || !severity) {
-      alert('Please select incident type and severity')
+    if (!type) {
+      alert('Please select incident type')
       return
     }
 
@@ -69,7 +69,6 @@ function ReportIncident() {
 
     const payload = {
       type: type,
-      severity: Number(severity),
       location: {
         type: 'Point',
         coordinates: [lngVal, latVal]
@@ -77,6 +76,10 @@ function ReportIncident() {
       address: address || 'Bhubaneswar, Odisha',
       description: description,
       reporter_phone: reporterPhone || ''
+    }
+
+    if (severity) {
+      payload.severity = Number(severity)
     }
 
     try {
@@ -211,7 +214,7 @@ function ReportIncident() {
 
         {/* Severity */}
         <div>
-          <label style={labelStyle}>Severity Level</label>
+          <label style={labelStyle}>Severity Level (Optional - AI Assessed)</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
             {severityOptions.map((s) => (
               <button

@@ -4,5 +4,6 @@ const getStats = require('../controllers/getStats');
 const auth = require('../middlewares/auth');
 
 router.route('/stats').get(auth, getStats);
+router.route('/getStats').get(auth, getStats);
 
 module.exports = router;

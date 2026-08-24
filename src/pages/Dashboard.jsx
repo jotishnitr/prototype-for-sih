@@ -64,7 +64,7 @@ function Dashboard({ onUnauthorized }) {
 
     async function getStats() {
       try {
-        const response = await fetch("https://resqnet-fmhd.onrender.com/api/getStats", {
+        const response = await fetch("https://resqnet-fmhd.onrender.com/api/stats", {
           method: "GET",
           credentials: "include"
         })
@@ -249,7 +249,7 @@ function Dashboard({ onUnauthorized }) {
           ) : (
             <div className="card" style={{ padding: 18 }}>
               <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                Click any incident marker on the map to view details.
+                Click any incident marker on the map to view the details.
               </p>
             </div>
           )}

@@ -20,7 +20,7 @@ const getAlertConfig = (type, severity, title) => {
   const titleLower = title ? title.toLowerCase() : ''
 
   // Breach
-  if (normType === 'breach' || titleLower.includes('breach') || normSeverity === 'critical') {
+  if (normType === 'breach' || titleLower.includes('breach')) {
     return {
       label: 'BREACH PROTOCOL',
       color: 'var(--red)',
@@ -56,20 +56,27 @@ const getAlertConfig = (type, severity, title) => {
     }
   }
 
-  // General fallbacks
+  // Get color based on severity
+  let color = 'var(--blue)'
   if (normSeverity === 'critical' || normSeverity === 'high') {
-    return {
-      label: 'CRITICAL ALERT',
-      color: 'var(--red)',
-      borderColor: 'var(--red)',
-      requiresAuth: false
+    color = 'var(--red)'
+  } else if (normSeverity === 'warning' || normSeverity === 'medium') {
+    color = 'var(--orange)'
+  }
+
+  // Format type as label
+  let label = 'ALERT LOG'
+  if (type) {
+    label = type.replace('_', ' ').toUpperCase()
+    if (label === 'FLOOD' || label === 'CYCLONE' || label === 'LANDSLIDE' || label === 'FIRE') {
+      label = `${label} ALERT`
     }
   }
 
   return {
-    label: type ? type.replace('_', ' ').toUpperCase() : 'ALERT LOG',
-    color: 'var(--blue)',
-    borderColor: 'var(--blue)',
+    label,
+    color,
+    borderColor: color,
     requiresAuth: false
   }
 }

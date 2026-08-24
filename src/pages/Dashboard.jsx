@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import MapView from '../components/MapView.jsx'
 import StatsCard from '../components/StatsCard.jsx'
 import IncidentCard from '../components/IncidentCard.jsx'
@@ -15,6 +16,7 @@ import {
 const MAP_CENTER = [20.2975, 85.8290]
 
 function Dashboard({ onUnauthorized }) {
+  const navigate = useNavigate()
 
   const [incidents, setIncidents] = useState(null)
   const [resources, setResources] = useState(initialResources)
@@ -43,17 +45,19 @@ function Dashboard({ onUnauthorized }) {
         })
         if (!response.ok) {
           if (onUnauthorized) onUnauthorized()
+          navigate('/login', { replace: true })
           return
         }
         setIsVerified(true)
       } catch (err) {
         console.error("User verification failed:", err)
         if (onUnauthorized) onUnauthorized()
+        navigate('/login', { replace: true })
       }
     }
 
     verifyUser()
-  }, [onUnauthorized])
+  }, [onUnauthorized, navigate])
 
   useEffect(() => {
     if (!isVerified) return

@@ -1,4 +1,4 @@
-function AlertCard({ alert }) {
+﻿function AlertCard({ alert }) {
   if (!alert) return null;
 
   const isAlert = alert.severity === 'RED ALERT' || alert.severity === 'ORANGE ALERT' || alert.severity === 'CRITICAL' || alert.severity === 'HIGH';
@@ -18,6 +18,8 @@ function AlertCard({ alert }) {
     ? 'chip-critical' 
     : (isModerate ? 'chip-warning' : 'chip-info');
 
+  const icon = isAlert || isModerate ? '\u26A0\uFE0F ' : '\u26C5 ';
+
   return (
     <div className="card" style={{ padding: 18, borderLeft: `4px solid ${borderColor}` }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -32,7 +34,7 @@ function AlertCard({ alert }) {
       </div>
 
       <p style={{ fontSize: 17, fontWeight: 800, color: titleColor, marginBottom: 4 }}>
-        {isAlert || isModerate ? '?? ' : '??? '}{alert.title}
+        {icon}{alert.title}
       </p>
       <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
         Affected Area: {alert.area}

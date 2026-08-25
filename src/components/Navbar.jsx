@@ -34,9 +34,9 @@ function Navbar() {
               {l.label}
             </Link>
           ))}
-          <a href="#about" style={{ ...styles.link, color: 'rgba(255,255,255,0.7)' }} onClick={() => setOpen(false)}>
-            About
-          </a>
+          <Link to="/about" style={{ ...styles.link, color: location.pathname === '/about' ? '#fff' : 'rgba(255,255,255,0.7)' }} onClick={() => setOpen(false)}>
+  About
+</Link>
         </nav>
 
         <button style={styles.menuBtn} onClick={() => setOpen(!open)} aria-label="Toggle menu">

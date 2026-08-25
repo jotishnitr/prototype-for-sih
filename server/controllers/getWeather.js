@@ -12,12 +12,17 @@ const getWeather = async (req, res) => {
         
         let lat = 20.296059; // Default to Bhubaneswar
         let lon = 85.824540;
-        let areaName = "Bhubaneswar";
+        let defaultArea = "Bhubaneswar";
 
         if (user.jurisdiction_id) {
             const jurisdiction = await Jurisdiction.findById(user.jurisdiction_id);
             if (jurisdiction) {
-                areaName = jurisdiction.name || areaName;
+                if (jurisdiction.district) {
+                    defaultArea = `${jurisdiction.district}`;
+                } else if (jurisdiction.name) {
+                    defaultArea = jurisdiction.name;
+                }
+                
                 if (jurisdiction.bounds && 
                     typeof jurisdiction.bounds.north === 'number' && 
                     typeof jurisdiction.bounds.south === 'number' && 
@@ -49,18 +54,35 @@ const getWeather = async (req, res) => {
         const weatherDesc = weatherData.weather?.[0]?.description || 'clear sky';
         const id = weatherData.weather?.[0]?.id || 800;
 
-        // Map severity
-        let severity = "NORMAL";
-        if (id >= 200 && id < 300) severity = "RED ALERT"; // Thunderstorm
-        else if (id >= 500 && id < 600) severity = "ORANGE ALERT"; // Rain
-        else if (windSpeedKmh > 50) severity = "RED ALERT";
-        else if (id >= 300 && id < 500) severity = "YELLOW ALERT"; // Drizzle
-        else if (id >= 600 && id < 700) severity = "ORANGE ALERT"; // Snow
+        // Area: format city name and district/jurisdiction
+        const cityName = weatherData.name || defaultArea;
+        const locationArea = cityName !== defaultArea ? `${cityName}, ${defaultArea}` : cityName;
 
-        // Map title
-        let title = `${weatherMain.toUpperCase()} - ${weatherDesc.toUpperCase()}`;
-        if (id >= 200 && id < 300) title = "THUNDERSTORM WARNING";
-        else if (id >= 500 && id < 600) title = "RAIN WARNING";
+        // Map severity & title
+        let severity = "NORMAL";
+        let title = weatherDesc.charAt(0).toUpperCase() + weatherDesc.slice(1);
+
+        if (id >= 200 && id < 300) {
+            severity = "RED ALERT";
+            title = "Thunderstorm Warning";
+        } else if (id >= 500 && id < 600) {
+            if (id === 502 || id === 503 || id === 504) {
+                severity = "RED ALERT";
+                title = "Heavy Rain Alert";
+            } else {
+                severity = "ORANGE ALERT";
+                title = "Rainfall Alert";
+            }
+        } else if (windSpeedKmh > 50) {
+            severity = "RED ALERT";
+            title = `High Wind Warning (${windSpeedKmh} km/h)`;
+        } else if (id >= 300 && id < 500) {
+            severity = "YELLOW ALERT";
+            title = "Drizzle / Light Rain";
+        } else if (id >= 600 && id < 700) {
+            severity = "ORANGE ALERT";
+            title = "Snowfall Warning";
+        }
 
         // Map rainfall description
         let rainfall = "None";
@@ -84,7 +106,7 @@ const getWeather = async (req, res) => {
 
         const weatherAlert = {
             title,
-            area: areaName,
+            area: locationArea,
             severity,
             wind: `${windSpeedKmh} km/h`,
             rainfall,

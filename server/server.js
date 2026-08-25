@@ -46,6 +46,7 @@ const autoAllocateRouter = require('./routes/autoAllocate');
 const updateIncidentStatusRouter = require('./routes/updateIncidentStatus');
 const deleteResourcesRouter = require('./routes/deleteResources');
 const postJurisdictionRouter = require('./routes/postJurisdiction');
+const getWeatherRouter = require('./routes/getWeather');
 const Jurisdiction = require('./models/Jurisdiction');
 
 app.use('/api', verifyRouter);
@@ -66,6 +67,7 @@ app.use('/api', autoAllocateRouter);
 app.use('/api', updateIncidentStatusRouter);
 app.use('/api', deleteResourcesRouter);
 app.use('/api', postJurisdictionRouter);
+app.use('/api', getWeatherRouter);
 
 app.get('/', (req, res) => res.send('ResQNet API running'));
 
@@ -95,4 +97,5 @@ app.get('/', (req, res) => {
 server.listen(port, () => {
     console.log(`Server running on port ${port}`);
 })
+
 

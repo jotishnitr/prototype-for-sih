@@ -78,6 +78,7 @@ function Dashboard({ onUnauthorized }) {
     : (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
 
   const [activeCount, setActiveCount] = useState(0)
+  const [weather, setWeather] = useState(weatherAlert)
   const [unitsDispatched, setUnitsDispatched] = useState(0)
   const [totalUnits, setTotalUnits] = useState(0)
   const [shelterCapacity, setShelterCapacity] = useState(0)
@@ -109,6 +110,23 @@ function Dashboard({ onUnauthorized }) {
 
     verifyUser()
   }, [onUnauthorized, navigate])
+
+  async function getWeather() {
+    try {
+      const response = await fetch("https://resqnet-fmhd.onrender.com/api/getWeather", {
+        method: "GET",
+        credentials: "include"
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.weatherAlert) {
+          setWeather(data.weatherAlert);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load live weather from server:", err);
+    }
+  }
 
   async function getStats() {
     try {
@@ -203,6 +221,7 @@ function Dashboard({ onUnauthorized }) {
     getResources()
     getAlerts()
     getReadiness()
+    getWeather()
   }, [isVerified])
 
   // WebSocket connection for real-time alerts
@@ -702,7 +721,7 @@ function Dashboard({ onUnauthorized }) {
             </div>
           )}
 
-          <AlertCard alert={weatherAlert} />
+          <AlertCard alert={weather} />
           <HighPriorityAlerts alerts={alerts} onViewAllLogs={() => setShowLogsModal(true)} />
         </div>
       </div>

@@ -6,6 +6,7 @@ const AlertLog = require('../models/AlertLog');
 const SmsLog = require('../models/SmsLog');
 const { broadcastToJurisdiction } = require('../utils/wsEvents');
 const sendSms = require('../utils/sendSms');
+const resourcePrediction = require('../utils/resourcePrediction');
 const autoAllocate = async (req, res) => {
     try {
         const io = req.app.get('io');
@@ -18,9 +19,11 @@ const autoAllocate = async (req, res) => {
             return res.status(404).json({ message: "Incident not found" });
         }
 
+        const predicted_resource = await resourcePrediction(req, res);
         const resource = await Resource.findOne({
             jurisdiction_id: jurisdiction_id,
             status: 'available',
+            type: predicted_resource,
             location: {
                 $near: {
                     $geometry: {

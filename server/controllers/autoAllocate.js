@@ -14,29 +14,62 @@ const autoAllocate = async (req, res) => {
         const incidentId = req.params.id;
         const user = await User.findById(userId);
         const incident = await Incident.findById(incidentId);
-        const jurisdiction_id = incident.jurisdiction_id;
         if (!incident) {
             return res.status(404).json({ message: "Incident not found" });
         }
+        const jurisdiction_id = incident.jurisdiction_id;
 
-        const predicted_resource = await resourcePrediction(req, res);
-        const resource = await Resource.findOne({
-            jurisdiction_id: jurisdiction_id,
-            status: 'available',
-            type: predicted_resource,
-            location: {
-                $near: {
-                    $geometry: {
-                        type: 'Point',
-                        coordinates: incident.location.coordinates
-                    },
-                    $maxDistance: 50000  // 50km
+        // Predict suitable resource type using AI based on incident details
+        let predicted_resource = null;
+        try {
+            predicted_resource = await resourcePrediction({
+                body: {
+                    description: incident.description,
+                    type: incident.type,
+                    severity: incident.severity
                 }
-            }
-        });
+            });
+        } catch (predErr) {
+            console.error("Resource prediction error in autoAllocate:", predErr);
+        }
+
+        let resource = null;
+        if (predicted_resource) {
+            resource = await Resource.findOne({
+                jurisdiction_id: jurisdiction_id,
+                status: 'available',
+                type: predicted_resource,
+                location: {
+                    $near: {
+                        $geometry: {
+                            type: 'Point',
+                            coordinates: incident.location.coordinates
+                        },
+                        $maxDistance: 50000  // 50km
+                    }
+                }
+            });
+        }
+
+        // Fallback: If no predicted unit type is found nearby, allocate closest available unit of any type
+        if (!resource) {
+            resource = await Resource.findOne({
+                jurisdiction_id: jurisdiction_id,
+                status: 'available',
+                location: {
+                    $near: {
+                        $geometry: {
+                            type: 'Point',
+                            coordinates: incident.location.coordinates
+                        },
+                        $maxDistance: 50000  // 50km
+                    }
+                }
+            });
+        }
 
         if (!resource) {
-            return res.status(404).json({ message: "No available resources found" });
+            return res.status(404).json({ message: "No available resources found within 50km radius" });
         }
 
         const allocation = new Allocation({

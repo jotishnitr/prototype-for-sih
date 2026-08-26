@@ -23,12 +23,16 @@ const updateIncidentStatus = async (req, res) => {
             resource = await Resource.findById(incident.allocated_resource_id);
             if (resource) {
                 resource.status = 'available';
-                if (resource.type === 'rescue_team') {
-                    resource.rescue_team.available_members += 1;
-                } else if (resource.type === 'medical_unit') {
-                    resource.medical_unit.available_staff += 1;
-                } else if (resource.type === 'shelter') {
-                    resource.shelter.capacity_remaining += 1;
+                if (resource.type === 'rescue_team' && resource.rescue_team) {
+                    resource.rescue_team.available_members = resource.rescue_team.total_members || 0;
+                    resource.rescue_team.available_boats = resource.rescue_team.total_boats || 0;
+                    resource.rescue_team.available_vehicles = resource.rescue_team.total_vehicles || 0;
+                } else if (resource.type === 'medical_unit' && resource.medical_unit) {
+                    resource.medical_unit.available_staff = resource.medical_unit.total_staff || 0;
+                    resource.medical_unit.available_ambulances = resource.medical_unit.total_ambulances || 0;
+                    resource.medical_unit.available_beds = resource.medical_unit.total_beds || 0;
+                } else if (resource.type === 'shelter' && resource.shelter) {
+                    resource.shelter.capacity_remaining = resource.shelter.capacity_total || 0;
                 }
                 await resource.save();
             }

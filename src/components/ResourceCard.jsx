@@ -14,7 +14,7 @@ const typeIcon = {
   'shelter': '🏠'
 }
 
-function ResourceCard({ resource, distance, onAssign, assigning }) {
+function ResourceCard({ resource, distance, onAssign, assigning, onDelete }) {
   const isAvailable = resource.status?.toLowerCase() === 'available'
   
   // Format type label
@@ -69,14 +69,27 @@ function ResourceCard({ resource, distance, onAssign, assigning }) {
         </div>
       )}
 
-      <button
-        className="btn btn-secondary btn-small"
-        onClick={() => onAssign(resource)}
-        disabled={!isAvailable || assigning}
-        style={assignButtonStyle}
-      >
-        Assign Resource
-      </button>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+        {onDelete && (
+          <button
+            className="btn btn-small"
+            onClick={() => onDelete(resource)}
+            style={{ padding: '5px 12px', fontSize: '11px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
+          >
+            🗑️ Delete
+          </button>
+        )}
+        {onAssign && (
+          <button
+            className="btn btn-secondary btn-small"
+            onClick={() => onAssign(resource)}
+            disabled={!isAvailable || assigning}
+            style={assignButtonStyle}
+          >
+            Assign Resource
+          </button>
+        )}
+      </div>
     </div>
   )
 }

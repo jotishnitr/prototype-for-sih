@@ -21,32 +21,20 @@ const postAllocate = async (req, res) => {
             return res.status(404).json({ message: "Resource or Incident not found" });
         }
 
-        if (resource.type === 'rescue_team') {
-            await Resource.findByIdAndUpdate(resource._id, {
-                $inc: { 'rescue_team.available_members': -1 },
-                $set: {
-                    status: resource.rescue_team.available_members === 1 ? 'deployed' : 'available'
-                }
-            });
+        resource.status = 'deployed';
+        if (resource.type === 'rescue_team' && resource.rescue_team) {
+            resource.rescue_team.available_members = 0;
+            resource.rescue_team.available_boats = 0;
+            resource.rescue_team.available_vehicles = 0;
+        } else if (resource.type === 'medical_unit' && resource.medical_unit) {
+            resource.medical_unit.available_staff = 0;
+            resource.medical_unit.available_ambulances = 0;
+            resource.medical_unit.available_beds = 0;
+        } else if (resource.type === 'shelter' && resource.shelter) {
+            resource.shelter.capacity_remaining = 0;
+            resource.status = 'full';
         }
-
-        if (resource.type === 'shelter') {
-            await Resource.findByIdAndUpdate(resource._id, {
-                $inc: { 'shelter.capacity_remaining': -1 },
-                $set: {
-                    status: resource.shelter.capacity_remaining === 1 ? 'full' : 'available'
-                }
-            });
-        }
-
-        if (resource.type === 'medical_unit') {
-            await Resource.findByIdAndUpdate(resource._id, {
-                $inc: { 'medical_unit.available_staff': -1 },
-                $set: {
-                    status: resource.medical_unit.available_staff === 1 ? 'deployed' : 'available'
-                }
-            });
-        }
+        await resource.save();
 
 
         const allocation = new Allocation({

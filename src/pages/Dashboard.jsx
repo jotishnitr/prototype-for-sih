@@ -8,11 +8,7 @@ import HighPriorityAlerts from '../components/HighPriorityAlerts.jsx'
 import ResourceReadiness from '../components/ResourceReadiness.jsx'
 import ResourceCard from '../components/ResourceCard.jsx'
 import { io } from 'socket.io-client'
-import {
-  resources as initialResources,
-  weatherAlert,
-  getDistanceKm
-} from '../data/mockData.js'
+import { getDistanceKm } from '../data/mockData.js'
 
 const typeIcon = {
   'rescue_team': '👨‍🚒',
@@ -32,7 +28,7 @@ function Dashboard({ onUnauthorized }) {
   const navigate = useNavigate()
 
   const [incidents, setIncidents] = useState(null)
-  const [resources, setResources] = useState(initialResources)
+  const [resources, setResources] = useState([])
   const [alerts, setAlerts] = useState([])
   const [readinessData, setReadinessData] = useState(null)
   const [user, setUser] = useState(null)
@@ -78,12 +74,11 @@ function Dashboard({ onUnauthorized }) {
     : (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
 
   const [activeCount, setActiveCount] = useState(0)
-  const [weather, setWeather] = useState(weatherAlert)
+  const [weather, setWeather] = useState(null)
   const [unitsDispatched, setUnitsDispatched] = useState(0)
   const [totalUnits, setTotalUnits] = useState(0)
   const [shelterCapacity, setShelterCapacity] = useState(0)
   const [estResponse, setEstResponse] = useState(0)
-
   const [isVerified, setIsVerified] = useState(false)
 
   useEffect(() => {
@@ -210,6 +205,74 @@ function Dashboard({ onUnauthorized }) {
       }
     } catch (err) {
       console.warn("Could not load resource readiness from server:", err)
+    }
+  }
+
+  async function handleResolveIncident(incident) {
+    const incId = incident._id || incident.id
+    if (!incId) return
+    if (!window.confirm(`Are you sure you want to mark incident "${incident.id || incId}" as resolved?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`https://resqnet-fmhd.onrender.com/api/updateIncidentStatus/${incId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({ status: "resolved" })
+      })
+
+      if (response.ok) {
+        alert("Incident status updated to resolved.")
+        setSelectedId(null)
+        getIncidents()
+        getResources()
+        getStats()
+      } else {
+        const data = await response.json()
+        alert(data.message || "Failed to update incident status.")
+      }
+    } catch (err) {
+      console.error("Resolve incident error:", err)
+      alert("Network error updating incident status.")
+    }
+  }
+
+  async function handleDeleteResource(resource) {
+    const resId = resource._id || resource.id
+    if (!resId) return
+    if (!window.confirm(`Are you sure you want to delete resource "${resource.name || resId}"?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch("https://resqnet-fmhd.onrender.com/api/deleteResources", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({ resource_id: resId })
+      })
+
+      if (response.ok) {
+        alert("Resource deleted successfully.")
+        getResources()
+        getIncidents()
+        getStats()
+        if (selectedResource && (selectedResource._id === resId || selectedResource.id === resId)) {
+          setSelectedResource(null)
+        }
+      } else {
+        const data = await response.json()
+        alert(data.message || "Failed to delete resource.")
+      }
+    } catch (err) {
+      console.error("Delete resource error:", err)
+      alert("Network error deleting resource.")
     }
   }
 
@@ -599,6 +662,8 @@ function Dashboard({ onUnauthorized }) {
               viewMode={viewMode}
               onSelectIncident={selectIncident}
               onSelectResource={selectResource}
+              onResolveIncident={handleResolveIncident}
+              onDeleteResource={handleDeleteResource}
               center={
                 incidents && incidents.length > 0 && incidents[0].location?.coordinates
                   ? [incidents[0].location.coordinates[1], incidents[0].location.coordinates[0]]
@@ -648,19 +713,28 @@ function Dashboard({ onUnauthorized }) {
                   )}
                 </div>
                 
-                <button 
-                  className="btn btn-outline btn-small"
-                  onClick={() => setSelectedResource(null)}
-                  style={{ alignSelf: 'flex-start', padding: '5px 12px', fontSize: '11px', marginTop: 4 }}
-                >
-                  Clear Selection
-                </button>
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <button 
+                    className="btn btn-outline btn-small"
+                    onClick={() => setSelectedResource(null)}
+                    style={{ padding: '5px 12px', fontSize: '11px' }}
+                  >
+                    Clear Selection
+                  </button>
+                  <button 
+                    className="btn btn-small"
+                    onClick={() => handleDeleteResource(selectedResource)}
+                    style={{ padding: '5px 12px', fontSize: '11px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    🗑️ Delete Resource
+                  </button>
+                </div>
               </div>
             </div>
           ) : selectedIncident ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <h3 style={panelTitle}>INCIDENT DETAILS</h3>
-              <IncidentCard incident={selectedIncident} />
+              <IncidentCard incident={selectedIncident} onResolve={handleResolveIncident} />
 
               {selectedIncident.status === 'Assigned' || selectedIncident.status === 'allocated' ? (
                 <div className="card" style={{ padding: 14, background: 'var(--blue-bg)' }}>

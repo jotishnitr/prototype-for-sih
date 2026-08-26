@@ -81,7 +81,6 @@ const styles = {
     letterSpacing: '0.03em'
   },
   nav: {
-    display: 'flex',
     gap: 28,
     alignItems: 'center'
   },
@@ -93,10 +92,13 @@ const styles = {
   menuBtn: {
     display: 'none',
     flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: 4,
     background: 'none',
     border: 'none',
-    padding: 8
+    padding: 8,
+    cursor: 'pointer'
   },
   bar: {
     width: 22,

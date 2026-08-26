@@ -3,7 +3,7 @@ const resourceSchema = new mongoose.Schema({
     name: { type: String, required: true },
     type: {
         type: String,
-        enum: ['rescue_team', 'shelter', 'supply_depot', 'medical_unit'],
+        enum: ['rescue_team', 'shelter', 'supply_depot', 'medical_unit', 'evacuation_vehicle'],
         required: true
     },
     status: {

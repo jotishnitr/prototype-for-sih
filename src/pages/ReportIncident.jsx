@@ -53,6 +53,43 @@ function ReportIncident() {
     )
   }
 
+  function convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = (event) => {
+        const img = new Image()
+        img.src = event.target.result
+        img.onload = () => {
+          const maxDim = 1200
+          let width = img.width
+          let height = img.height
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width)
+              width = maxDim
+            } else {
+              width = Math.round((width * maxDim) / height)
+              height = maxDim
+            }
+          }
+
+          const canvas = document.createElement('canvas')
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, 0, 0, width, height)
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
+          resolve(dataUrl)
+        }
+        img.onerror = () => resolve(event.target.result)
+      }
+      reader.onerror = (error) => reject(error)
+    })
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
 
@@ -63,6 +100,15 @@ function ReportIncident() {
 
     setSubmitting(true)
     setErrorMsg('')
+
+    let photoUrl = ''
+    if (photo) {
+      try {
+        photoUrl = await convertFileToBase64(photo)
+      } catch (err) {
+        console.error('Failed to read image file:', err)
+      }
+    }
 
     const lngVal = location?.lng ? parseFloat(location.lng) : 85.8245
     const latVal = location?.lat ? parseFloat(location.lat) : 20.2961
@@ -75,7 +121,8 @@ function ReportIncident() {
       },
       address: address || 'Bhubaneswar, Odisha',
       description: description,
-      reporter_phone: reporterPhone || ''
+      reporter_phone: reporterPhone || '',
+      photo_url: photoUrl
     }
 
     if (severity) {
@@ -254,13 +301,68 @@ function ReportIncident() {
         {/* Photo */}
         <div>
           <label style={labelStyle}>Photo Attachment (optional)</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setPhoto(e.target.files[0] || null)}
-            style={{ fontSize: 13 }}
-          />
-          {photo && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{photo.name} selected</p>}
+          <div
+            onClick={() => document.getElementById('incident-photo-input').click()}
+            style={{
+              border: '2px dashed #cbd5e1',
+              borderRadius: 12,
+              padding: '24px 16px',
+              textAlign: 'center',
+              background: '#f8fafc',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              marginTop: 4
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--navy, #1e293b)'
+              e.currentTarget.style.background = '#f1f5f9'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#cbd5e1'
+              e.currentTarget.style.background = '#f8fafc'
+            }}
+          >
+            <input
+              id="incident-photo-input"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setPhoto(e.target.files[0] || null)}
+              style={{ display: 'none' }}
+            />
+
+            {photo ? (
+              <div>
+                <img
+                  src={URL.createObjectURL(photo)}
+                  alt="Selected preview"
+                  style={{
+                    maxHeight: 180,
+                    maxWidth: '100%',
+                    borderRadius: 8,
+                    objectFit: 'cover',
+                    marginBottom: 12,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                />
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-dark, #0f172a)' }}>
+                  📷 {photo.name}
+                </p>
+                <span style={{ fontSize: 12, color: 'var(--blue, #2563eb)', marginTop: 4, display: 'inline-block' }}>
+                  Click to change photo
+                </span>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
+                <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-dark, #0f172a)', marginBottom: 4 }}>
+                  Click or drag incident photo here
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--text-muted, #64748b)' }}>
+                  Upload damage, flood level, or emergency situation photo (JPG, PNG, WEBP)
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         <button type="submit" className="btn btn-primary btn-full" disabled={submitting}>

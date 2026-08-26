@@ -128,7 +128,7 @@ function FitMapBounds({ incidents, resources, selectedIncident }) {
   return null
 }
 
-function renderResourcePopupContent(res, incName) {
+function renderResourcePopupContent(res, incName, onDeleteResource) {
   const id = res.name || res.id || (res._id ? `RES-${String(res._id).slice(-4).toUpperCase()}` : 'RES')
   const typeLabel = res.type 
     ? res.type.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()) 
@@ -169,6 +169,29 @@ function renderResourcePopupContent(res, incName) {
           Assigned to {incName}
         </p>
       )}
+
+      {onDeleteResource && (
+        <button
+          style={{
+            marginTop: 8,
+            width: '100%',
+            padding: '6px 10px',
+            background: '#ef4444',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 700,
+            cursor: 'pointer'
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            onDeleteResource(res)
+          }}
+        >
+          🗑️ Delete Resource
+        </button>
+      )}
     </div>
   )
 }
@@ -182,12 +205,15 @@ function MapView({
   viewMode = 'reports',
   onSelectIncident,
   onSelectResource,
+  onResolveIncident,
+  onDeleteResource,
   center = [20.2975, 85.8290]
 }) {
   const showIncidents = !viewMode || viewMode === 'reports' || viewMode === 'heatmap'
   const showResources = viewMode === 'resources' || viewMode === 'reports'
 
-  const incList = Array.isArray(incidents) ? incidents : (incidents?.incidents || [])
+  const rawIncList = Array.isArray(incidents) ? incidents : (incidents?.incidents || [])
+  const incList = rawIncList.filter((inc) => inc && String(inc.status).toLowerCase() !== 'resolved')
   const resList = Array.isArray(resources) ? resources : (resources?.resources || [])
   const shelterList = Array.isArray(shelters) ? shelters : (shelters?.shelters || [])
 
@@ -286,6 +312,28 @@ function MapView({
                       )}
                     </div>
                   )}
+                  {onResolveIncident && rawInc.status !== 'resolved' && (
+                    <button
+                      style={{
+                        marginTop: 8,
+                        width: '100%',
+                        padding: '6px 10px',
+                        background: 'var(--green, #10b981)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onResolveIncident(rawInc)
+                      }}
+                    >
+                      ✅ Mark Resolved
+                    </button>
+                  )}
                 </div>
               </Popup>
             </Marker>
@@ -349,7 +397,8 @@ function MapView({
                     status: 'Deployed',
                     location: inc.resource_location
                   },
-                  inc.id || (inc._id ? `INC-${String(inc._id).slice(-4).toUpperCase()}` : 'Incident')
+                  inc.id || (inc._id ? `INC-${String(inc._id).slice(-4).toUpperCase()}` : 'Incident'),
+                  onDeleteResource
                 )}
               </Popup>
             </Marker>
@@ -382,7 +431,7 @@ function MapView({
               }}
             >
               <Popup>
-                {renderResourcePopupContent(res)}
+                {renderResourcePopupContent(res, null, onDeleteResource)}
               </Popup>
             </Marker>
           )

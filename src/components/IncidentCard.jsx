@@ -18,7 +18,7 @@ const severityTextMap = {
   1: 'Low'
 }
 
-function IncidentCard({ incident }) {
+function IncidentCard({ incident, onResolve }) {
   if (!incident) return null
 
   const idText = incident.id || (incident._id ? `INC-${String(incident._id).slice(-4).toUpperCase()}` : 'INC')
@@ -65,6 +65,16 @@ function IncidentCard({ incident }) {
         </p>
       )}
 
+      {incident.photo_url && (
+        <div style={{ marginTop: 8, marginBottom: 8 }}>
+          <img
+            src={incident.photo_url}
+            alt="Incident attachment"
+            style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border-color, #e2e8f0)' }}
+          />
+        </div>
+      )}
+
       {incident.resource_name && (
         <div style={{ background: '#f0f7ff', padding: 10, borderRadius: 6, margin: '8px 0', fontSize: 12 }}>
           <p style={{ fontWeight: 700, color: 'var(--blue)' }}>Assigned Resource:</p>
@@ -79,10 +89,19 @@ function IncidentCard({ incident }) {
         <span>{reportedTimeText}</span>
       </div>
 
-      <div style={{ marginTop: 10 }}>
-        <span className={`chip ${statusText === 'Assigned' || statusText === 'allocated' ? 'chip-info' : 'chip-neutral'}`}>
+      <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span className={`chip ${statusText === 'Assigned' || statusText === 'allocated' ? 'chip-info' : statusText === 'resolved' ? 'chip-low' : 'chip-neutral'}`}>
           {statusText}
         </span>
+        {onResolve && incident.status !== 'resolved' && (
+          <button
+            className="btn btn-small"
+            onClick={() => onResolve(incident)}
+            style={{ padding: '4px 10px', fontSize: 11, background: '#10b981', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}
+          >
+            ✅ Mark Resolved
+          </button>
+        )}
       </div>
     </div>
   )

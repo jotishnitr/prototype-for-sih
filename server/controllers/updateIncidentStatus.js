@@ -47,6 +47,8 @@ const updateIncidentStatus = async (req, res) => {
         if (updatedAlert) {
             broadcastToJurisdiction(io, incident.jurisdiction_id.toString(), 'alert:new', updatedAlert);
         }
+        broadcastToJurisdiction(io, incident.jurisdiction_id.toString(), 'incident:updated', incident);
+        io.emit('incident:updated', incident);
         return res.status(200).json({ message: "Incident status updated successfully" });
     } catch (error) {
         console.log(error.message);

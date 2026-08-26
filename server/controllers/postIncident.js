@@ -51,6 +51,12 @@ const postIncident = async (req, res) => {
         });
 
         await incident.save();
+
+        if (jurisdiction_id) {
+            broadcastToJurisdiction(io, jurisdiction_id.toString(), 'incident:new', incident);
+        }
+        io.emit('incident:new', incident);
+
         let alert = null;
         if (incident.reporter_phone) {
             await sendSms(

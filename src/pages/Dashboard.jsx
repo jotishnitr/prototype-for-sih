@@ -287,15 +287,44 @@ function Dashboard({ onUnauthorized }) {
     getWeather()
   }, [isVerified])
 
-  // WebSocket connection for real-time alerts
+  // WebSocket connection for real-time alerts & live updates
   useEffect(() => {
-    if (!isVerified || !user || !user.jurisdiction_id) return
+    if (!isVerified) return
 
-    const socket = io("https://resqnet-fmhd.onrender.com")
+    const socket = io("https://resqnet-fmhd.onrender.com", {
+      transports: ['websocket', 'polling'],
+      withCredentials: true
+    })
 
     socket.on('connect', () => {
       console.log('Socket.io connected:', socket.id)
-      socket.emit('join:jurisdiction', user.jurisdiction_id)
+      if (user?.jurisdiction_id) {
+        socket.emit('join:jurisdiction', user.jurisdiction_id)
+      }
+    })
+
+    socket.on('incident:new', (newIncident) => {
+      console.log('New incident received via socket:', newIncident)
+      if (newIncident) {
+        setIncidents((prev) => {
+          const targetId = newIncident._id || newIncident.id
+          const exists = prev.some(i => (i._id || i.id) === targetId)
+          if (exists) return prev
+          return [newIncident, ...prev]
+        })
+        getStats()
+      }
+    })
+
+    socket.on('incident:updated', (updatedIncident) => {
+      console.log('Incident updated via socket:', updatedIncident)
+      if (updatedIncident) {
+        const targetId = updatedIncident._id || updatedIncident.id
+        setIncidents((prev) => prev.map(i => ((i._id || i.id) === targetId ? updatedIncident : i)))
+        getStats()
+        getResources()
+        getReadiness()
+      }
     })
 
     socket.on('alert:new', (newAlert) => {
@@ -310,6 +339,7 @@ function Dashboard({ onUnauthorized }) {
             return [newAlert, ...prevAlerts]
           }
         })
+        getStats()
       }
     })
 
@@ -322,6 +352,16 @@ function Dashboard({ onUnauthorized }) {
           return [newResource, ...prev]
         })
         getStats()
+        getReadiness()
+      }
+    })
+
+    socket.on('resource:deleted', (data) => {
+      console.log('Resource deleted via socket:', data)
+      if (data?.resource_id) {
+        setResources((prev) => prev.filter(r => (r._id || r.id) !== data.resource_id))
+        getStats()
+        getIncidents()
         getReadiness()
       }
     })

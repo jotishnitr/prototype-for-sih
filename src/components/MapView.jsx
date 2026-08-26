@@ -1,7 +1,9 @@
-import { MapContainer, TileLayer, Marker, Popup, Circle, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useEffect } from 'react'
 import 'leaflet/dist/leaflet.css'
+import HeatmapLayer from './HeatmapLayer'
+
 
 const severityColor = {
   Critical: '#e13c3c',
@@ -28,14 +30,15 @@ const resourceEmoji = {
 }
 
 // Build a small colored circle icon for an incident marker
-function incidentIcon(severity, selected) {
+function incidentIcon(severity, selected, isHeatmap) {
   const color = severityColor[severity] || '#5c6b7a'
-  const size = selected ? 26 : 20
+  const size = selected ? 26 : (isHeatmap ? 14 : 20)
   return L.divIcon({
     className: 'incident-marker',
     html: `<div style="
       width:${size}px;height:${size}px;border-radius:50%;
-      background:${color};border:2px solid white;
+      background:${isHeatmap ? 'rgba(255,255,255,0.7)' : color};
+      border:2px solid ${color};
       box-shadow:0 0 0 2px ${color}55;
     "></div>`,
     iconSize: [size, size],
@@ -217,6 +220,28 @@ function MapView({
   const resList = Array.isArray(resources) ? resources : (resources?.resources || [])
   const shelterList = Array.isArray(shelters) ? shelters : (shelters?.shelters || [])
 
+  const heatPoints = incList
+    .map((rawInc) => {
+      const lat = rawInc.lat ?? rawInc.location?.coordinates?.[1]
+      const lng = rawInc.lng ?? rawInc.location?.coordinates?.[0]
+      if (lat == null || lng == null) return null
+
+      const s = String(rawInc.severity || '').toLowerCase()
+      let weight = 0.5
+      if (s === '5' || s === 'critical') {
+        weight = 1.0
+      } else if (s === '4' || s === 'high') {
+        weight = 0.8
+      } else if (s === '3' || s === 'medium') {
+        weight = 0.5
+      } else if (s === '2' || s === '1' || s === 'low') {
+        weight = 0.3
+      }
+
+      return [lat, lng, weight]
+    })
+    .filter(Boolean)
+
   return (
     <MapContainer center={center} zoom={12} style={{ width: '100%', height: '100%' }}>
       <TileLayer
@@ -227,28 +252,13 @@ function MapView({
       <RecenterOnSelect incident={selectedIncident} resource={selectedResource} />
       <FitMapBounds incidents={incidents} resources={resources} selectedIncident={selectedIncident} />
 
-      {/* Heatmap mode */}
-      {viewMode === 'heatmap' &&
-        incList.map((rawInc) => {
-          const lat = rawInc.lat ?? rawInc.location?.coordinates?.[1]
-          const lng = rawInc.lng ?? rawInc.location?.coordinates?.[0]
-          if (lat == null || lng == null) return null
-          const sevMap = { 5: 'Critical', 4: 'High', 3: 'Medium', 2: 'Low', 1: 'Low' }
-          const severity = typeof rawInc.severity === 'number' ? (sevMap[rawInc.severity] || 'Medium') : (rawInc.severity || 'Medium')
-          return (
-            <Circle
-              key={`heat-${rawInc.id || rawInc._id}`}
-              center={[lat, lng]}
-              radius={severity === 'Critical' ? 900 : severity === 'High' ? 650 : 400}
-              pathOptions={{
-                color: severityColor[severity] || '#5c6b7a',
-                fillColor: severityColor[severity] || '#5c6b7a',
-                fillOpacity: 0.25,
-                weight: 0
-              }}
-            />
-          )
-        })}
+      {/* Continuous density heatmap mode */}
+      {viewMode === 'heatmap' && (
+        <HeatmapLayer
+          points={heatPoints}
+          options={{ radius: 45, blur: 25, maxZoom: 10, minOpacity: 0.6 }}
+        />
+      )}
 
       {showIncidents &&
         incList.map((rawInc) => {
@@ -282,7 +292,7 @@ function MapView({
             <Marker
               key={rawInc.id || rawInc._id}
               position={[lat, lng]}
-              icon={incidentIcon(severity, isSelected)}
+              icon={incidentIcon(severity, isSelected, viewMode === 'heatmap')}
               eventHandlers={{
                 click: () => {
                   if (onSelectIncident) {

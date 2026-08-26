@@ -1,10 +1,17 @@
 const gemini = require('./gemini');
 const openrouter = require('./openrouter');
 
+const geminiModels = [
+    'gemini-2.5-flash',
+    'gemini-1.5-flash',
+    'gemini-flash-latest'
+];
+
 const openrouterModels = [
-    "anthropic/claude-3.5-sonnet",
-    "meta-llama/llama-3.1-70b-instruct",
-    "mistralai/mistral-large-2411",
+    "google/gemini-2.5-flash",
+    "meta-llama/llama-3.3-70b-instruct",
+    "mistralai/mistral-small-24b-instruct-2501",
+    "deepseek/deepseek-r1"
 ];
 
 const validTypes = ['rescue_team', 'medical_unit', 'shelter', 'supply_depot'];
@@ -30,19 +37,18 @@ Severity: ${severity || 3}/5
 Description: "${description || ''}"
 
 Available Resource Types:
-- rescue_team    : for people trapped, flood rescue, structural collapse, evacuation
+- rescue_team    : for people trapped, flood rescue, structural collapse, evacuation, people stuck in water
 - medical_unit   : for injuries, casualties, medical emergencies, unconscious persons
 - shelter        : for displaced families, homeless citizens needing temporary housing
 - supply_depot   : for food/water/medicine distribution, relief material needed
 
 Rules:
+- People trapped in water or flood = rescue_team first
 - Injuries or casualties mentioned = medical_unit first
-- People trapped in water/building = rescue_team first
 - Families displaced, homeless = shelter first
 - Food/water shortage only = supply_depot first
 - Fire with injuries = medical_unit first
 - Flood with trapped people = rescue_team first
-- Multiple needs = pick most urgent one
 
 Reply with ONLY one of these exact strings:
 rescue_team
@@ -59,16 +65,19 @@ const resourcePrediction = async (req, res) => {
 
     let predicted = null;
 
-    // Primary: Try Google Gemini (gemini-flash-latest)
-    try {
-        const response = await gemini.models.generateContent({
-            model: 'gemini-flash-latest',
-            contents: resourcePrompt(description, type, severity),
-        });
-        const text = response.text;
-        predicted = parseResourceType(text);
-    } catch (geminiError) {
-        console.warn("Gemini resource prediction failed, falling back to OpenRouter:", geminiError.message);
+    // Primary: Try Google Gemini models
+    for (const model of geminiModels) {
+        try {
+            const response = await gemini.models.generateContent({
+                model: model,
+                contents: resourcePrompt(description, type, severity),
+            });
+            const text = response.text;
+            predicted = parseResourceType(text);
+            if (predicted) break;
+        } catch (geminiError) {
+            console.warn(`Gemini model ${model} failed:`, geminiError.message);
+        }
     }
 
     // Fallback: Try OpenRouter models loop
@@ -92,14 +101,25 @@ const resourcePrediction = async (req, res) => {
 
     // Final Fallback: Heuristic keyword analysis
     if (!predicted) {
-        const descLower = String(description).toLowerCase();
-        if (descLower.includes("injur") || descLower.includes("casualt") || descLower.includes("doctor") || descLower.includes("hospital")) {
+        const descLower = String(description).toLowerCase() + ' ' + String(type).toLowerCase();
+        
+        // Priority 1: Rescue Team (people trapped, water/floods, evacuation, rescue, stuck/struck)
+        if (descLower.includes("rescue") || descLower.includes("trap") || descLower.includes("stuck") || descLower.includes("struck") || descLower.includes("flood") || descLower.includes("collapse") || descLower.includes("drown") || descLower.includes("boat")) {
+            predicted = 'rescue_team';
+        }
+        // Priority 2: Medical Unit (injuries, casualties, blood, unconscious, hospital, doctor)
+        else if (descLower.includes("injur") || descLower.includes("casualt") || descLower.includes("doctor") || descLower.includes("hospital") || descLower.includes("blood") || descLower.includes("patient") || descLower.includes("unconscious")) {
             predicted = 'medical_unit';
-        } else if (descLower.includes("water") || descLower.includes("food") || descLower.includes("ration")) {
-            predicted = 'supply_depot';
-        } else if (descLower.includes("home") || descLower.includes("shelter") || descLower.includes("evacuat")) {
+        }
+        // Priority 3: Shelter (homeless, displaced, housing)
+        else if (descLower.includes("shelter") || descLower.includes("homeless") || descLower.includes("displaced")) {
             predicted = 'shelter';
-        } else {
+        }
+        // Priority 4: Supply Depot (food, ration, drinking water, packets)
+        else if (descLower.includes("food") || descLower.includes("ration") || descLower.includes("drinking water") || descLower.includes("packets")) {
+            predicted = 'supply_depot';
+        }
+        else {
             predicted = 'rescue_team';
         }
     }

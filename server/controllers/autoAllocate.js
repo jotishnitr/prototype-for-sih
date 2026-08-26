@@ -44,14 +44,13 @@ const autoAllocate = async (req, res) => {
                         $geometry: {
                             type: 'Point',
                             coordinates: incident.location.coordinates
-                        },
-                        $maxDistance: 50000  // 50km
+                        }
                     }
                 }
             });
         }
 
-        // Fallback: If no predicted unit type is found nearby, allocate closest available unit of any type
+        // Fallback: If no unit of predicted type is available, allocate closest available unit of any type in jurisdiction
         if (!resource) {
             resource = await Resource.findOne({
                 jurisdiction_id: jurisdiction_id,
@@ -61,15 +60,14 @@ const autoAllocate = async (req, res) => {
                         $geometry: {
                             type: 'Point',
                             coordinates: incident.location.coordinates
-                        },
-                        $maxDistance: 50000  // 50km
+                        }
                     }
                 }
             });
         }
 
         if (!resource) {
-            return res.status(404).json({ message: "No available resources found within 50km radius" });
+            return res.status(404).json({ message: "No available resources found in this sector" });
         }
 
         const allocation = new Allocation({

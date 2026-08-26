@@ -48,7 +48,7 @@ const severityPrediction = async (req) => {
     // Primary: Try Gemini AI
     try {
         const response = await gemini.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-flash-latest',
             contents: severityPrompt(description, incidentType),
         });
         const text = response.text;

@@ -3,6 +3,7 @@ const Jurisdiction = require('../models/Jurisdiction');
 const createAlert = require('../utils/createAlerts');
 const AlertLog = require('../models/AlertLog');
 const sendSms = require('../utils/sendSms');
+const severityPrediction = require('../utils/severityPrediction');
 
 const { broadcastToJurisdiction } = require('../utils/wsEvents');
 const postIncident = async (req, res) => {
@@ -10,6 +11,17 @@ const postIncident = async (req, res) => {
         const io = req.app.get('io');
         const { type, severity, location, address, description, photo_url, reporter_phone } = req.body;
         console.log(req.body);
+
+        let finalSeverity = severity;
+        if (finalSeverity == null || finalSeverity === '') {
+            try {
+                finalSeverity = await severityPrediction(req);
+            } catch (predErr) {
+                console.error("Severity prediction error, defaulting to 3:", predErr);
+                finalSeverity = 3;
+            }
+        }
+        finalSeverity = Number(finalSeverity) || 3;
 
         let jurisdiction_id = null;
 
@@ -29,7 +41,7 @@ const postIncident = async (req, res) => {
 
         const incident = new Incident({
             type,
-            severity,
+            severity: finalSeverity,
             location,
             address,
             description,
@@ -46,12 +58,12 @@ const postIncident = async (req, res) => {
                 `ResQNet: Report received. Incident ID: ${incident._id}. Help is on the way.`
             );
         }
-        if (severity >= 4) {
+        if (finalSeverity >= 4) {
             alert = await createAlert(io, {
                 type: type,
                 title: `New ${type} incident reported`,
                 message: `${type} incident reported at ${address}`,
-                severity: severity,
+                severity: finalSeverity,
                 jurisdiction_id: jurisdiction_id,
                 incident_id: incident._id,
                 resource_id: null

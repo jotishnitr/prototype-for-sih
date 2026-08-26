@@ -5,6 +5,7 @@ import Home from './pages/Home.jsx'
 import ReportIncident from './pages/ReportIncident.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Login from './pages/Login.jsx'
+import About from './pages/About.jsx'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -28,6 +29,7 @@ function App() {
           path="/dashboard"
           element={<Dashboard onUnauthorized={handleLogout} />}
         />
+        <Route path="/about" element={<About />} />
       </Routes>
     </>
   )

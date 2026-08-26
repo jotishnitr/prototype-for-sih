@@ -2,13 +2,10 @@ const gemini = require('./gemini');
 const openrouter = require('./openrouter');
 
 const geminiModels = [
-    'gemini-2.5-flash',
-    'gemini-1.5-flash',
     'gemini-flash-latest'
 ];
 
 const openrouterModels = [
-    "google/gemini-2.5-flash",
     "meta-llama/llama-3.3-70b-instruct",
     "mistralai/mistral-small-24b-instruct-2501",
     "deepseek/deepseek-r1"

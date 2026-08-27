@@ -112,7 +112,7 @@ function About() {
           <div>
             <h4 style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, fontWeight: 700 }}>Backend &amp; APIs</h4>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {['Node.js', 'Express.js', 'Socket.io Server', 'JWT Auth', 'SMS API', 'Axios'].map(t => (
+              {['Node.js', 'Express.js', 'Socket.io Server', 'JWT Auth', 'SMS API', 'Fetch API'].map(t => (
                 <span key={t} className="chip chip-low" style={{ fontSize: 11 }}>{t}</span>
               ))}
             </div>

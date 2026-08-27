@@ -86,6 +86,50 @@ function Login({ onLogin }) {
             {loading ? 'Signing In...' : 'Sign In & Continue'}
           </button>
         </form>
+
+        {/* Demo Credentials for Judges */}
+        <div style={{
+          marginTop: 20,
+          padding: '14px 16px',
+          background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+          border: '1px solid #bbf7d0',
+          borderRadius: 8,
+          boxShadow: '0 2px 6px rgba(22, 101, 52, 0.06)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
+              ⚖️ Demo Credentials for Judges
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('rajesh@ndrf.gov.in')
+                setPassword('Test@1234')
+              }}
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#fff',
+                background: '#16a34a',
+                border: 'none',
+                padding: '4px 10px',
+                borderRadius: 4,
+                cursor: 'pointer'
+              }}
+            >
+              ⚡ Auto-Fill
+            </button>
+          </div>
+
+          <div style={{ fontSize: 12, color: '#14532d', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <p style={{ margin: 0 }}>
+              <strong>Gmail:</strong> <code style={{ background: 'rgba(255,255,255,0.7)', padding: '2px 6px', borderRadius: 4, fontFamily: 'monospace' }}>rajesh@ndrf.gov.in</code>
+            </p>
+            <p style={{ margin: 0 }}>
+              <strong>Password:</strong> <code style={{ background: 'rgba(255,255,255,0.7)', padding: '2px 6px', borderRadius: 4, fontFamily: 'monospace' }}>Test@1234</code>
+            </p>
+          </div>
+        </div>
       </div>
     </main>
   )

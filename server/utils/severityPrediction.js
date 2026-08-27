@@ -26,9 +26,12 @@ Rules:
 Reply with ONLY a single digit between 1 and 5. No explanation. No punctuation.`;
 
 const openrouterModels = [
-    "anthropic/claude-3.5-sonnet",
-    "meta-llama/llama-3.1-70b-instruct",
-    "mistralai/mistral-large-2411",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "meta-llama/llama-3.1-8b-instruct:free",
+    "google/gemma-2-9b-it:free",
+    "mistralai/mistral-7b-instruct:free",
+    "qwen/qwen-2.5-7b-instruct:free",
+    "deepseek/deepseek-r1:free"
 ];
 
 const parseSeverity = (text) => {

@@ -328,9 +328,12 @@ const precautions = async (reqOrParams, res) => {
     // 3. Preference 3: Try OpenRouter (with 3.5s timeout per model)
     if (!aiProviderUsed) {
         const openrouterModels = [
-            "meta-llama/llama-3.3-70b-instruct",
-            "mistralai/mistral-small-24b-instruct-2501",
-            "deepseek/deepseek-r1"
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "meta-llama/llama-3.1-8b-instruct:free",
+            "google/gemma-2-9b-it:free",
+            "mistralai/mistral-7b-instruct:free",
+            "qwen/qwen-2.5-7b-instruct:free",
+            "deepseek/deepseek-r1:free"
         ];
         for (const model of openrouterModels) {
             try {

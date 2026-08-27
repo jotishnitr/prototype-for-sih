@@ -6,9 +6,12 @@ const geminiModels = [
 ];
 
 const openrouterModels = [
-    "meta-llama/llama-3.3-70b-instruct",
-    "mistralai/mistral-small-24b-instruct-2501",
-    "deepseek/deepseek-r1"
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "meta-llama/llama-3.1-8b-instruct:free",
+    "google/gemma-2-9b-it:free",
+    "mistralai/mistral-7b-instruct:free",
+    "qwen/qwen-2.5-7b-instruct:free",
+    "deepseek/deepseek-r1:free"
 ];
 
 const validTypes = ['rescue_team', 'medical_unit', 'shelter', 'supply_depot'];

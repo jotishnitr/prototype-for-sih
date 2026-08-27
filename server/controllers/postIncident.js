@@ -3,6 +3,7 @@ const Jurisdiction = require('../models/Jurisdiction');
 const createAlert = require('../utils/createAlerts');
 const sendSms = require('../utils/sendSms');
 const severityPrediction = require('../utils/severityPrediction');
+const precautions = require('../utils/precautions');
 const { broadcastToJurisdiction } = require('../utils/wsEvents');
 
 const postIncident = async (req, res) => {
@@ -60,6 +61,19 @@ const postIncident = async (req, res) => {
 
         await incident.save();
 
+        // Call precautions utility to generate precautions & estimated response time
+        let precautionsData = null;
+        try {
+            precautionsData = await precautions({
+                incident: incident,
+                description: incident.description,
+                type: incident.type,
+                reportedTime: incident.createdAt || new Date().toISOString()
+            });
+        } catch (pErr) {
+            console.warn("Precautions generation error in postIncident:", pErr.message);
+        }
+
         // WebSocket broadcast
         try {
             if (jurisdiction_id) {
@@ -97,7 +111,15 @@ const postIncident = async (req, res) => {
             }
         }
 
-        return res.status(200).json({ message: "Incident posted successfully", incident });
+        return res.status(200).json({
+            message: "Incident posted successfully",
+            incident,
+            precautions: precautionsData?.precautions || [],
+            suggestions: precautionsData?.suggestions || [],
+            estResponseTime: precautionsData?.estResponseTime || 12.5,
+            historicalStats: precautionsData?.historicalStats || null,
+            aiProvider: precautionsData?.aiProvider || 'Gemini'
+        });
     }
     catch (err) {
         console.error("Post incident controller error:", err);

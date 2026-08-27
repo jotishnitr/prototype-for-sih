@@ -41,37 +41,47 @@ const parseSeverity = (text) => {
     return null;
 };
 
+const withTimeout = (promise, ms = 3000, label = "AI Model") => {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+};
+
 const severityPrediction = async (req) => {
     const description = req.body?.description || req.body?.details || '';
     const incidentType = req.body?.incidentType || req.body?.type || 'General';
 
-    // Primary: Try Gemini AI
+    // Primary: Try Gemini AI with 3s timeout
     try {
-        const response = await gemini.models.generateContent({
+        const geminiPromise = gemini.models.generateContent({
             model: 'gemini-flash-latest',
             contents: severityPrompt(description, incidentType),
         });
+        const response = await withTimeout(geminiPromise, 3000, "Gemini AI");
         const text = response.text;
         const predicted = parseSeverity(text);
         if (predicted) return predicted;
     } catch (geminiError) {
-        console.warn("Gemini severity prediction failed, falling back to OpenRouter:", geminiError.message);
+        console.warn("Gemini severity prediction failed or timed out, falling back to OpenRouter:", geminiError.message);
     }
 
-    // Fallback: Try OpenRouter models
+    // Fallback: Try OpenRouter models with 3s timeout per model
     for (const model of openrouterModels) {
         try {
-            const completion = await openrouter.chat.completions.create({
+            const openrouterPromise = openrouter.chat.completions.create({
                 model: model,
                 messages: [
                     { role: 'user', content: severityPrompt(description, incidentType) }
                 ]
             });
+            const completion = await withTimeout(openrouterPromise, 3000, `OpenRouter (${model})`);
             const text = completion.choices?.[0]?.message?.content;
             const predicted = parseSeverity(text);
             if (predicted) return predicted;
         } catch (openrouterError) {
-            console.warn(`OpenRouter model ${model} failed:`, openrouterError.message);
+            console.warn(`OpenRouter model ${model} failed or timed out:`, openrouterError.message);
         }
     }
 

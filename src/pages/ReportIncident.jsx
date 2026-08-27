@@ -61,7 +61,7 @@ function ReportIncident() {
         const img = new Image()
         img.src = event.target.result
         img.onload = () => {
-          const maxDim = 1200
+          const maxDim = 800
           let width = img.width
           let height = img.height
 
@@ -81,7 +81,7 @@ function ReportIncident() {
           const ctx = canvas.getContext('2d')
           ctx.drawImage(img, 0, 0, width, height)
 
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.6)
           resolve(dataUrl)
         }
         img.onerror = () => resolve(event.target.result)
@@ -129,15 +129,20 @@ function ReportIncident() {
       payload.severity = Number(severity)
     }
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 18000)
+
     try {
       const response = await fetch("https://resqnet-fmhd.onrender.com/api/postIncident", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       })
 
+      clearTimeout(timeoutId)
       const data = await response.json()
 
       if (response.ok) {
@@ -150,8 +155,13 @@ function ReportIncident() {
         setErrorMsg(data.message || 'Failed to submit report. Please try again.')
       }
     } catch (err) {
+      clearTimeout(timeoutId)
       console.error("Post incident error:", err)
-      setErrorMsg('Network error. Failed to reach disaster server.')
+      if (err.name === 'AbortError') {
+        setErrorMsg('Submission timed out. The server is taking longer to respond. Please retry.')
+      } else {
+        setErrorMsg('Network error. Failed to reach disaster server.')
+      }
     } finally {
       setSubmitting(false)
     }

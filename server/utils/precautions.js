@@ -235,11 +235,23 @@ function getHeuristicPrecautions(type, estResponseTime) {
 }
 
 /**
+ * Helper to enforce strict timeouts on AI model calls.
+ */
+const withTimeout = (promise, ms = 3500, label = "AI Model") => {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+};
+
+/**
  * Main precautions utility function.
  * Preference Order:
- * 1. Gemini
- * 2. Groq
- * 3. OpenRouter
+ * 1. Gemini (3.5s timeout)
+ * 2. Groq (3.5s timeout)
+ * 3. OpenRouter (3.5s timeout)
+ * 4. Rule-based Heuristics
  */
 const precautions = async (reqOrParams, res) => {
     let incident = null;
@@ -271,12 +283,13 @@ const precautions = async (reqOrParams, res) => {
 
     const promptText = precautionsPrompt(description, incidentType, reportedTime, estResponseTime, historicalStats);
 
-    // 1. Preference 1: Try Gemini
+    // 1. Preference 1: Try Gemini (with 3.5s timeout)
     try {
-        const geminiRes = await gemini.models.generateContent({
+        const geminiPromise = gemini.models.generateContent({
             model: 'gemini-flash-latest',
             contents: promptText
         });
+        const geminiRes = await withTimeout(geminiPromise, 3500, "Gemini AI");
         const text = geminiRes.text;
         const parsed = parseAiJson(text);
         if (parsed && (parsed.precautions.length > 0 || parsed.suggestions.length > 0)) {
@@ -285,18 +298,19 @@ const precautions = async (reqOrParams, res) => {
             aiProviderUsed = 'gemini';
         }
     } catch (geminiError) {
-        console.warn("Gemini precautions generation failed, trying Groq:", geminiError.message);
+        console.warn("Gemini precautions generation failed or timed out, trying Groq:", geminiError.message);
     }
 
-    // 2. Preference 2: Try Groq
+    // 2. Preference 2: Try Groq (with 3.5s timeout per model)
     if (!aiProviderUsed) {
         const groqModels = ["llama-3.3-70b-versatile", "llama3-8b-8192", "mixtral-8x7b-32768"];
         for (const model of groqModels) {
             try {
-                const completion = await groq.chat.completions.create({
+                const groqPromise = groq.chat.completions.create({
                     model: model,
                     messages: [{ role: 'user', content: promptText }]
                 });
+                const completion = await withTimeout(groqPromise, 3500, `Groq (${model})`);
                 const text = completion.choices?.[0]?.message?.content;
                 const parsed = parseAiJson(text);
                 if (parsed && (parsed.precautions.length > 0 || parsed.suggestions.length > 0)) {
@@ -306,12 +320,12 @@ const precautions = async (reqOrParams, res) => {
                     break;
                 }
             } catch (groqError) {
-                console.warn(`Groq model ${model} failed:`, groqError.message);
+                console.warn(`Groq model ${model} failed or timed out:`, groqError.message);
             }
         }
     }
 
-    // 3. Preference 3: Try OpenRouter
+    // 3. Preference 3: Try OpenRouter (with 3.5s timeout per model)
     if (!aiProviderUsed) {
         const openrouterModels = [
             "meta-llama/llama-3.3-70b-instruct",
@@ -320,10 +334,11 @@ const precautions = async (reqOrParams, res) => {
         ];
         for (const model of openrouterModels) {
             try {
-                const completion = await openrouter.chat.completions.create({
+                const openrouterPromise = openrouter.chat.completions.create({
                     model: model,
                     messages: [{ role: 'user', content: promptText }]
                 });
+                const completion = await withTimeout(openrouterPromise, 3500, `OpenRouter (${model})`);
                 const text = completion.choices?.[0]?.message?.content;
                 const parsed = parseAiJson(text);
                 if (parsed && (parsed.precautions.length > 0 || parsed.suggestions.length > 0)) {
@@ -333,7 +348,7 @@ const precautions = async (reqOrParams, res) => {
                     break;
                 }
             } catch (openrouterError) {
-                console.warn(`OpenRouter model ${model} failed:`, openrouterError.message);
+                console.warn(`OpenRouter model ${model} failed or timed out:`, openrouterError.message);
             }
         }
     }

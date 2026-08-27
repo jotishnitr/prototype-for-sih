@@ -1,23 +1,27 @@
 const Incident = require('../models/Incident');
 const Jurisdiction = require('../models/Jurisdiction');
 const createAlert = require('../utils/createAlerts');
-const AlertLog = require('../models/AlertLog');
 const sendSms = require('../utils/sendSms');
 const severityPrediction = require('../utils/severityPrediction');
-
 const { broadcastToJurisdiction } = require('../utils/wsEvents');
+
 const postIncident = async (req, res) => {
     try {
         const io = req.app.get('io');
         const { type, severity, location, address, description, photo_url, reporter_phone } = req.body;
-        console.log(req.body);
+        console.log("Posting new incident report:", { type, severity, address, reporter_phone });
 
         let finalSeverity = severity;
         if (finalSeverity == null || finalSeverity === '') {
             try {
-                finalSeverity = await severityPrediction(req);
+                // 3.5 second timeout guard for AI severity prediction
+                const predictionPromise = severityPrediction(req);
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Severity prediction timeout")), 3500)
+                );
+                finalSeverity = await Promise.race([predictionPromise, timeoutPromise]);
             } catch (predErr) {
-                console.error("Severity prediction error, defaulting to 3:", predErr);
+                console.error("Severity prediction error or timeout, defaulting to 3:", predErr.message);
                 finalSeverity = 3;
             }
         }
@@ -25,17 +29,21 @@ const postIncident = async (req, res) => {
 
         let jurisdiction_id = null;
 
-        // Find the jurisdiction where the coordinate [lng, lat] falls inside the bounding box
+        // Find jurisdiction bounding box
         if (location && location.coordinates && location.coordinates.length === 2) {
             const [lng, lat] = location.coordinates;
-            const jurisdiction = await Jurisdiction.findOne({
-                "bounds.south": { $lte: lat },
-                "bounds.north": { $gte: lat },
-                "bounds.west": { $lte: lng },
-                "bounds.east": { $gte: lng }
-            });
-            if (jurisdiction) {
-                jurisdiction_id = jurisdiction._id;
+            try {
+                const jurisdiction = await Jurisdiction.findOne({
+                    "bounds.south": { $lte: lat },
+                    "bounds.north": { $gte: lat },
+                    "bounds.west": { $lte: lng },
+                    "bounds.east": { $gte: lng }
+                });
+                if (jurisdiction) {
+                    jurisdiction_id = jurisdiction._id;
+                }
+            } catch (jErr) {
+                console.warn("Jurisdiction lookup warning:", jErr.message);
             }
         }
 
@@ -52,36 +60,49 @@ const postIncident = async (req, res) => {
 
         await incident.save();
 
-        if (jurisdiction_id) {
-            broadcastToJurisdiction(io, jurisdiction_id.toString(), 'incident:new', incident);
+        // WebSocket broadcast
+        try {
+            if (jurisdiction_id) {
+                broadcastToJurisdiction(io, jurisdiction_id.toString(), 'incident:new', incident);
+            }
+            if (io) {
+                io.emit('incident:new', incident);
+            }
+        } catch (wsErr) {
+            console.warn("WebSocket broadcast warning:", wsErr.message);
         }
-        io.emit('incident:new', incident);
 
-        let alert = null;
+        // Non-blocking SMS dispatch
         if (incident.reporter_phone) {
-            await sendSms(
+            sendSms(
                 incident.reporter_phone,
                 `ResQNet: Report received. Incident ID: ${incident._id}. Help is on the way.`
-            );
+            ).catch(smsErr => console.error("Non-blocking SMS error:", smsErr.message));
         }
+
+        // Non-blocking alert log creation
         if (finalSeverity >= 4) {
-            alert = await createAlert(io, {
-                type: type,
-                title: `New ${type} incident reported`,
-                message: `${type} incident reported at ${address}`,
-                severity: finalSeverity,
-                jurisdiction_id: jurisdiction_id,
-                incident_id: incident._id,
-                resource_id: null
-            });
+            try {
+                createAlert(io, {
+                    type: type,
+                    title: `New ${type} incident reported`,
+                    message: `${type} incident reported at ${address}`,
+                    severity: finalSeverity,
+                    jurisdiction_id: jurisdiction_id,
+                    incident_id: incident._id,
+                    resource_id: null
+                }).catch(aErr => console.error("Non-blocking Alert creation error:", aErr.message));
+            } catch (alertErr) {
+                console.error("Alert trigger error:", alertErr.message);
+            }
         }
 
         return res.status(200).json({ message: "Incident posted successfully", incident });
     }
     catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Server error" });
+        console.error("Post incident controller error:", err);
+        return res.status(500).json({ message: "Server error posting incident" });
     }
-}
+};
 
 module.exports = postIncident;

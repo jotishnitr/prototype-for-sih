@@ -55,6 +55,14 @@ supply_depot
 
 No explanation. No punctuation. No extra text.`;
 
+const withTimeout = (promise, ms = 3000, label = "AI Model") => {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+};
+
 const resourcePrediction = async (req, res) => {
     const description = req?.body?.description || req?.description || '';
     const type = req?.body?.type || req?.body?.incidentType || req?.type || 'General';
@@ -62,36 +70,38 @@ const resourcePrediction = async (req, res) => {
 
     let predicted = null;
 
-    // Primary: Try Google Gemini models
+    // Primary: Try Google Gemini models with 3s timeout
     for (const model of geminiModels) {
         try {
-            const response = await gemini.models.generateContent({
+            const geminiPromise = gemini.models.generateContent({
                 model: model,
                 contents: resourcePrompt(description, type, severity),
             });
+            const response = await withTimeout(geminiPromise, 3000, `Gemini (${model})`);
             const text = response.text;
             predicted = parseResourceType(text);
             if (predicted) break;
         } catch (geminiError) {
-            console.warn(`Gemini model ${model} failed:`, geminiError.message);
+            console.warn(`Gemini model ${model} failed or timed out:`, geminiError.message);
         }
     }
 
-    // Fallback: Try OpenRouter models loop
+    // Fallback: Try OpenRouter models loop with 3s timeout
     if (!predicted) {
         for (const model of openrouterModels) {
             try {
-                const completion = await openrouter.chat.completions.create({
+                const openrouterPromise = openrouter.chat.completions.create({
                     model: model,
                     messages: [
                         { role: 'user', content: resourcePrompt(description, type, severity) }
                     ]
                 });
+                const completion = await withTimeout(openrouterPromise, 3000, `OpenRouter (${model})`);
                 const text = completion.choices?.[0]?.message?.content;
                 predicted = parseResourceType(text);
                 if (predicted) break;
             } catch (openrouterError) {
-                console.warn(`OpenRouter model ${model} failed:`, openrouterError.message);
+                console.warn(`OpenRouter model ${model} failed or timed out:`, openrouterError.message);
             }
         }
     }

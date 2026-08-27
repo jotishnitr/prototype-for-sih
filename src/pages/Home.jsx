@@ -32,7 +32,11 @@ function Home() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span className="chip chip-critical" style={{ fontSize: '10px', padding: '2px 8px' }}>⚡ EARLY WARNING BANNER</span>
             <span style={{ fontWeight: 600, color: '#fef1e6' }}>
-              {weatherAlert || 'IMD Weather Warning: Active Monitoring Enabled for Coastal & Flood-prone Districts'}
+              {typeof weatherAlert === 'string'
+                ? weatherAlert
+                : (weatherAlert?.title
+                    ? `${weatherAlert.title}${weatherAlert.area ? ` (${weatherAlert.area})` : ''}${weatherAlert.severity ? ` - ${weatherAlert.severity}` : ''}`
+                    : 'IMD Weather Warning: Active Monitoring Enabled for Coastal & Flood-prone Districts')}
             </span>
           </div>
           <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 6 }}>

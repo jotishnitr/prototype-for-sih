@@ -84,13 +84,13 @@ function RecenterOnSelect({ incident, resource }) {
       const lat = incident.lat ?? incident.location?.coordinates?.[1]
       const lng = incident.lng ?? incident.location?.coordinates?.[0]
       if (lat != null && lng != null) {
-        map.flyTo([lat, lng], Math.max(map.getZoom(), 13), { duration: 0.6 })
+        map.flyTo([lat, lng], Math.max(map.getZoom(), 14), { duration: 0.6 })
       }
     } else if (resource) {
       const lat = resource.lat ?? resource.location?.coordinates?.[1]
       const lng = resource.lng ?? resource.location?.coordinates?.[0]
       if (lat != null && lng != null) {
-        map.flyTo([lat, lng], Math.max(map.getZoom(), 13), { duration: 0.6 })
+        map.flyTo([lat, lng], Math.max(map.getZoom(), 14), { duration: 0.6 })
       }
     }
   }, [incident, resource, map])
@@ -102,30 +102,37 @@ function FitMapBounds({ incidents, resources, selectedIncident }) {
   useEffect(() => {
     if (selectedIncident) return
 
-    const points = []
-    
-    const incList = Array.isArray(incidents) ? incidents : (incidents?.incidents || [])
+    const rawIncList = Array.isArray(incidents) ? incidents : (incidents?.incidents || [])
+    const incList = rawIncList.filter((inc) => inc && String(inc.status).toLowerCase() !== 'resolved')
     const resList = Array.isArray(resources) ? resources : (resources?.resources || [])
 
+    let points = []
+
+    // Focus map on active incident locations first so map zooms into incident area (e.g. Rourkela)
     incList.forEach(inc => {
       const lat = inc.lat ?? inc.location?.coordinates?.[1]
       const lng = inc.lng ?? inc.location?.coordinates?.[0]
-      if (lat != null && lng != null) {
+      if (lat != null && lng != null && (lat !== 0 || lng !== 0)) {
         points.push([lat, lng])
       }
     })
 
-    resList.forEach(res => {
-      const lat = res.lat ?? res.location?.coordinates?.[1]
-      const lng = res.lng ?? res.location?.coordinates?.[0]
-      if (lat != null && lng != null) {
-        points.push([lat, lng])
-      }
-    })
+    // If no active incident points, fallback to resource locations
+    if (points.length === 0) {
+      resList.forEach(res => {
+        const lat = res.lat ?? res.location?.coordinates?.[1]
+        const lng = res.lng ?? res.location?.coordinates?.[0]
+        if (lat != null && lng != null && (lat !== 0 || lng !== 0)) {
+          points.push([lat, lng])
+        }
+      })
+    }
 
     if (points.length > 0) {
       const bounds = L.latLngBounds(points)
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 })
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 })
+    } else {
+      map.setView([22.2528, 84.9119], 13)
     }
   }, [incidents, resources, selectedIncident, map])
   return null
@@ -210,7 +217,7 @@ function MapView({
   onSelectResource,
   onResolveIncident,
   onDeleteResource,
-  center = [20.2975, 85.8290]
+  center = [22.2528, 84.9119]
 }) {
   const showIncidents = !viewMode || viewMode === 'reports' || viewMode === 'heatmap'
   const showResources = viewMode === 'resources' || viewMode === 'reports'
@@ -243,7 +250,7 @@ function MapView({
     .filter(Boolean)
 
   return (
-    <MapContainer center={center} zoom={12} style={{ width: '100%', height: '100%' }}>
+    <MapContainer center={center} zoom={13} style={{ width: '100%', height: '100%' }}>
       <TileLayer
         attribution='&copy; OpenStreetMap contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

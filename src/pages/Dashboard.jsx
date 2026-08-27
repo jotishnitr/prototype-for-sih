@@ -77,7 +77,7 @@ function Dashboard({ onUnauthorized }) {
   const [weather, setWeather] = useState(null)
   const [unitsDispatched, setUnitsDispatched] = useState(0)
   const [totalUnits, setTotalUnits] = useState(0)
-  const [shelterCapacity, setShelterCapacity] = useState(0)
+  const [shelterCapacity, setShelterCapacity] = useState('0%')
   const [estResponse, setEstResponse] = useState(0)
   const [isVerified, setIsVerified] = useState(false)
 
@@ -134,7 +134,9 @@ function Dashboard({ onUnauthorized }) {
         setActiveCount(data.activeIncidents ?? 0)
         setUnitsDispatched(data.unitsDispatched ?? 0)
         setTotalUnits(data.resources?.length || 0)
-        setShelterCapacity(data.shelterCapacity ?? 0)
+        const cap = data.shelterCapacity
+        const formattedCap = typeof cap === 'string' && cap.includes('%') ? cap : (cap != null ? `${cap}%` : '0%')
+        setShelterCapacity(formattedCap)
         setEstResponse(data.avgResponse ?? 0)
       }
     } catch (err) {

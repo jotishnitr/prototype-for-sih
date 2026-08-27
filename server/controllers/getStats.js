@@ -21,7 +21,7 @@ const getStats = async (req, res) => {
         const resources = await Resource.find({ jurisdiction_id: jurisdictionId });
         const unitsDispatched = resources.filter((resource) => resource.status === 'deployed').length;
 
-        // calculating shelter capacity
+        // calculating shelter capacity occupancy percentage
         const shelters = await Resource.find({ jurisdiction_id: jurisdictionId, type: 'shelter' });
         let totalCapacity = 0;
         let remainingCapacity = 0;
@@ -30,8 +30,12 @@ const getStats = async (req, res) => {
                 totalCapacity += shelter.shelter.capacity_total || 0;
                 remainingCapacity += shelter.shelter.capacity_remaining || 0;
             }
-        })
-        const shelterCapacity = totalCapacity - remainingCapacity;
+        });
+        const occupiedCapacity = Math.max(0, totalCapacity - remainingCapacity);
+        const occupancyPercent = totalCapacity > 0
+            ? Math.min(100, Math.round((occupiedCapacity / totalCapacity) * 100))
+            : 0;
+        const shelterCapacity = `${occupancyPercent}%`;
 
         // calculating estResponse ( T.C - O(2n) )
         const userIncidents = await Incident.find({ jurisdiction_id: jurisdictionId })

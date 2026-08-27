@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useEffect } from 'react'
 import 'leaflet/dist/leaflet.css'
@@ -217,7 +217,10 @@ function MapView({
   onSelectResource,
   onResolveIncident,
   onDeleteResource,
-  center = [22.2528, 84.9119]
+  center = [22.2528, 84.9119],
+  allocating = false,
+  allocationType = 'auto',
+  predictedResource = null
 }) {
   const showIncidents = !viewMode || viewMode === 'reports' || viewMode === 'heatmap'
   const showResources = viewMode === 'resources' || viewMode === 'reports'
@@ -250,14 +253,25 @@ function MapView({
     .filter(Boolean)
 
   return (
-    <MapContainer center={center} zoom={13} style={{ width: '100%', height: '100%' }}>
-      <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {allocating && (
+        <div className="map-allocation-hud">
+          <div className="hud-spinner" />
+          <span>
+            {allocationType === 'auto'
+              ? '🤖 2DSphere AI Spatial Auto-Allocation Active...'
+              : '⚡ Assigning & Locking Emergency Resource...'}
+          </span>
+        </div>
+      )}
+      <MapContainer center={center} zoom={13} style={{ width: '100%', height: '100%' }}>
+        <TileLayer
+          attribution='&copy; OpenStreetMap contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
-      <RecenterOnSelect incident={selectedIncident} resource={selectedResource} />
-      <FitMapBounds incidents={incidents} resources={resources} selectedIncident={selectedIncident} />
+        <RecenterOnSelect incident={selectedIncident} resource={selectedResource} />
+        <FitMapBounds incidents={incidents} resources={resources} selectedIncident={selectedIncident} />
 
       {/* Continuous density heatmap mode */}
       {viewMode === 'heatmap' && (
@@ -296,39 +310,64 @@ function MapView({
           const isSelected = selectedIncident && (selectedIncident.id === id || selectedIncident.id === rawInc.id || selectedIncident._id === rawInc._id)
 
           return (
-            <Marker
-              key={rawInc.id || rawInc._id}
-              position={[lat, lng]}
-              icon={incidentIcon(severity, isSelected, viewMode === 'heatmap')}
-              eventHandlers={{
-                click: () => {
-                  if (onSelectIncident) {
-                    onSelectIncident(formattedInc)
+            <div key={rawInc.id || rawInc._id} style={{ display: 'contents' }}>
+              {isSelected && allocating && (
+                <Circle
+                  center={[lat, lng]}
+                  radius={750}
+                  pathOptions={{
+                    color: '#2563eb',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.25,
+                    weight: 3,
+                    dashArray: '6 6'
+                  }}
+                />
+              )}
+              <Marker
+                position={[lat, lng]}
+                icon={incidentIcon(severity, isSelected, viewMode === 'heatmap')}
+                eventHandlers={{
+                  click: () => {
+                    if (onSelectIncident) {
+                      onSelectIncident(formattedInc)
+                    }
                   }
-                }
-              }}
-            >
-              <Popup>
-                <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 160 }}>
-                  <p style={{ fontWeight: 800, marginBottom: 4 }}>{id}</p>
-                  <p style={{ marginBottom: 2 }}>{type}</p>
-                  <p style={{ marginBottom: 4, fontWeight: 700, color: severityColor[severity] || '#5c6b7a' }}>
-                    {String(severity).toUpperCase()}
-                  </p>
-                  <p style={{ fontSize: 12, marginBottom: 4 }}>{description}</p>
-                  <p style={{ fontSize: 12, color: '#5c6b7a' }}>Reported: {reportedTime}</p>
-                  <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {status}</p>
-                  {rawInc.resource_name && (
-                    <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid #eef1f4' }}>
-                      <p style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 700 }}>
-                        🚒 Allocated Resource:
-                      </p>
-                      <p style={{ fontSize: 12, fontWeight: 600 }}>{rawInc.resource_name}</p>
-                      {rawInc.resource_type && (
-                        <p style={{ fontSize: 11, color: '#5c6b7a' }}>Type: {rawInc.resource_type}</p>
-                      )}
-                    </div>
-                  )}
+                }}
+              >
+                <Popup>
+                  <div style={{ fontFamily: 'Inter, sans-serif', minWidth: 170 }}>
+                    <p style={{ fontWeight: 800, marginBottom: 4 }}>{id}</p>
+                    <p style={{ marginBottom: 2 }}>{type}</p>
+                    <p style={{ marginBottom: 4, fontWeight: 700, color: severityColor[severity] || '#5c6b7a' }}>
+                      {String(severity).toUpperCase()}
+                    </p>
+                    <p style={{ fontSize: 12, marginBottom: 4 }}>{description}</p>
+                    <p style={{ fontSize: 12, color: '#5c6b7a' }}>Reported: {reportedTime}</p>
+                    <p style={{ fontSize: 12, color: '#5c6b7a' }}>Status: {status}</p>
+
+                    {isSelected && predictedResource && (
+                      <div style={{ marginTop: 6, padding: '6px 8px', background: '#eff6ff', borderRadius: 6, border: '1px solid #bfdbfe' }}>
+                        <p style={{ fontSize: 11, color: '#1e40af', fontWeight: 700, margin: 0 }}>
+                          🤖 AI Suggested Resource:
+                        </p>
+                        <p style={{ fontSize: 11, color: '#1d4ed8', margin: '2px 0 0', fontWeight: 700 }}>
+                          {resourceEmoji[predictedResource] || '📍'} {predictedResource.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                        </p>
+                      </div>
+                    )}
+
+                    {rawInc.resource_name && (
+                      <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid #eef1f4' }}>
+                        <p style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 700 }}>
+                          🚒 Allocated Resource:
+                        </p>
+                        <p style={{ fontSize: 12, fontWeight: 600 }}>{rawInc.resource_name}</p>
+                        {rawInc.resource_type && (
+                          <p style={{ fontSize: 11, color: '#5c6b7a' }}>Type: {rawInc.resource_type}</p>
+                        )}
+                      </div>
+                    )}
                   {onResolveIncident && rawInc.status !== 'resolved' && (
                     <button
                       style={{
@@ -354,8 +393,9 @@ function MapView({
                 </div>
               </Popup>
             </Marker>
-          )
-        })}
+          </div>
+        )
+      })}
 
       {/* Allocated resources for incidents (shown in reports view as well) */}
       {showIncidents &&
@@ -510,6 +550,7 @@ function MapView({
         return null
       })}
     </MapContainer>
+  </div>
   )
 }
 

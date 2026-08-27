@@ -14,7 +14,7 @@ const typeIcon = {
   'shelter': '🏠'
 }
 
-function ResourceCard({ resource, distance, onAssign, assigning, onDelete }) {
+function ResourceCard({ resource, distance, onAssign, assigning, onDelete, isRecommended }) {
   const isAvailable = resource.status?.toLowerCase() === 'available'
   
   // Format type label
@@ -30,10 +30,17 @@ function ResourceCard({ resource, distance, onAssign, assigning, onDelete }) {
     capacityInfo = `Members: ${resource.rescue_team.available_members} / ${resource.rescue_team.total_members} ready`
   } else if (resource.type === 'medical_unit' && resource.medical_unit) {
     capacityInfo = `Ambulances: ${resource.medical_unit.available_ambulances} | Beds: ${resource.medical_unit.available_beds}`
+  } else if (resource.type === 'supply_depot' && resource.supply_depot) {
+    capacityInfo = `Food: ${resource.supply_depot.available_food_packets} | Water: ${resource.supply_depot.available_water_litres}L`
   }
 
   return (
-    <div className="card" style={containerStyle}>
+    <div className={`card ${isRecommended ? 'recommended-resource-highlight' : ''}`} style={containerStyle}>
+      {isRecommended && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '10.5px', fontWeight: 700, color: '#1d4ed8', background: '#dbeafe', padding: '2px 8px', borderRadius: 4, width: 'fit-content' }}>
+          <span>⭐ AI Recommended Match</span>
+        </div>
+      )}
       <div style={headerStyle}>
         <div style={{ flex: 1 }}>
           <p style={nameStyle}>
@@ -86,7 +93,7 @@ function ResourceCard({ resource, distance, onAssign, assigning, onDelete }) {
             disabled={!isAvailable || assigning}
             style={assignButtonStyle}
           >
-            Assign Resource
+            {assigning ? '⚡ Assigning...' : 'Assign Resource'}
           </button>
         )}
       </div>

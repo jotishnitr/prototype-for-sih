@@ -36,6 +36,11 @@ function Dashboard({ onUnauthorized }) {
   const [selectedResource, setSelectedResource] = useState(null)
   const [viewMode, setViewMode] = useState('reports')
   const [allocating, setAllocating] = useState(false)
+  const [allocationStep, setAllocationStep] = useState(0)
+  const [allocationType, setAllocationType] = useState('auto')
+  const [allocationSuccessMsg, setAllocationSuccessMsg] = useState(null)
+  const [predictedResource, setPredictedResource] = useState(null)
+  const [predictingResource, setPredictingResource] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [fetchingLocation, setFetchingLocation] = useState(false)
   const [showLogsModal, setShowLogsModal] = useState(false)
@@ -385,6 +390,62 @@ function Dashboard({ onUnauthorized }) {
     }
   }, [isVerified, user])
 
+  useEffect(() => {
+    if (!selectedIncident) {
+      setPredictedResource(null)
+      return
+    }
+
+    let isMounted = true
+    async function fetchPrediction() {
+      setPredictingResource(true)
+      try {
+        const response = await fetch("https://resqnet-fmhd.onrender.com/api/predictResource", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: selectedIncident.description || '',
+            type: selectedIncident.type || '',
+            severity: selectedIncident.severity || 3
+          }),
+          credentials: "include"
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.predicted_resource && isMounted) {
+            setPredictedResource(data.predicted_resource)
+            setPredictingResource(false)
+            return
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch remote prediction, using local fallback:", err)
+      }
+
+      if (isMounted) {
+        const text = (String(selectedIncident.description || '') + ' ' + String(selectedIncident.type || '')).toLowerCase()
+        if (text.includes("rescue") || text.includes("trap") || text.includes("flood") || text.includes("stuck") || text.includes("water") || text.includes("boat")) {
+          setPredictedResource("rescue_team")
+        } else if (text.includes("injur") || text.includes("casualt") || text.includes("medical") || text.includes("hospital") || text.includes("doctor") || text.includes("blood")) {
+          setPredictedResource("medical_unit")
+        } else if (text.includes("shelter") || text.includes("displaced") || text.includes("homeless")) {
+          setPredictedResource("shelter")
+        } else if (text.includes("food") || text.includes("water") || text.includes("ration") || text.includes("packet")) {
+          setPredictedResource("supply_depot")
+        } else {
+          setPredictedResource("rescue_team")
+        }
+        setPredictingResource(false)
+      }
+    }
+
+    fetchPrediction()
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedIncident])
+
   const calculateDistance = (inc, res) => {
     if (!inc?.location?.coordinates || !res?.location?.coordinates) return null
     const [incLng, incLat] = inc.location.coordinates
@@ -395,6 +456,13 @@ function Dashboard({ onUnauthorized }) {
   const handleAssignResource = async (resource) => {
     if (!selectedIncident) return
     setAllocating(true)
+    setAllocationType('manual')
+    setAllocationStep(1)
+    setAllocationSuccessMsg(null)
+
+    const timer1 = setTimeout(() => setAllocationStep(2), 350)
+    const timer2 = setTimeout(() => setAllocationStep(3), 750)
+
     try {
       const response = await fetch("https://resqnet-fmhd.onrender.com/api/postAllocate", {
         method: "POST",
@@ -409,11 +477,12 @@ function Dashboard({ onUnauthorized }) {
       })
       
       if (response.ok) {
-        // Refresh all states to update UI
+        setAllocationSuccessMsg(`✅ Resource "${resource.name || 'Emergency Unit'}" allocated successfully! SMS alert sent.`)
         await getStats()
         await getIncidents()
         await getResources()
         await getReadiness()
+        setTimeout(() => setAllocationSuccessMsg(null), 4500)
       } else {
         const errorData = await response.json()
         alert(errorData.message || "Failed to assign resource")
@@ -421,13 +490,23 @@ function Dashboard({ onUnauthorized }) {
     } catch (err) {
       console.error("Failed to assign resource:", err)
     } finally {
+      clearTimeout(timer1)
+      clearTimeout(timer2)
       setAllocating(false)
+      setAllocationStep(0)
     }
   }
 
   const handleAutoAllocate = async () => {
     if (!selectedIncident) return
     setAllocating(true)
+    setAllocationType('auto')
+    setAllocationStep(1)
+    setAllocationSuccessMsg(null)
+
+    const timer1 = setTimeout(() => setAllocationStep(2), 400)
+    const timer2 = setTimeout(() => setAllocationStep(3), 850)
+
     try {
       const incidentId = selectedIncident._id || selectedIncident.id
       const response = await fetch(`https://resqnet-fmhd.onrender.com/api/autoAllocate/${incidentId}`, {
@@ -436,17 +515,23 @@ function Dashboard({ onUnauthorized }) {
       })
       
       if (response.ok) {
-        // Refresh all states to update UI
+        setAllocationSuccessMsg("✅ 2DSphere AI Auto-Allocation Complete! Optimal unit assigned & dispatched via SMS.")
         await getStats()
         await getIncidents()
         await getResources()
         await getReadiness()
+        setTimeout(() => setAllocationSuccessMsg(null), 4500)
       } else {
         const errorData = await response.json()
         alert(errorData.message || "Failed to autoallocate resource")
       }
     } catch (err) {
       console.error("Failed to autoallocate resource:", err)
+    } finally {
+      clearTimeout(timer1)
+      clearTimeout(timer2)
+      setAllocating(false)
+      setAllocationStep(0)
     }
   }
 
@@ -619,6 +704,11 @@ function Dashboard({ onUnauthorized }) {
   )
   const availableResourcesSorted = selectedIncident 
     ? [...availableResources].sort((a, b) => {
+        if (predictedResource) {
+          const aMatch = a.type === predictedResource ? 1 : 0
+          const bMatch = b.type === predictedResource ? 1 : 0
+          if (aMatch !== bMatch) return bMatch - aMatch
+        }
         const distA = calculateDistance(selectedIncident, a) ?? Infinity
         const distB = calculateDistance(selectedIncident, b) ?? Infinity
         return distA - distB
@@ -706,6 +796,9 @@ function Dashboard({ onUnauthorized }) {
               onSelectResource={selectResource}
               onResolveIncident={handleResolveIncident}
               onDeleteResource={handleDeleteResource}
+              allocating={allocating}
+              allocationType={allocationType}
+              predictedResource={predictedResource}
               center={
                 incidents && incidents.length > 0 && incidents[0].location?.coordinates
                   ? [incidents[0].location.coordinates[1], incidents[0].location.coordinates[0]]
@@ -778,6 +871,68 @@ function Dashboard({ onUnauthorized }) {
               <h3 style={panelTitle}>INCIDENT DETAILS</h3>
               <IncidentCard incident={selectedIncident} onResolve={handleResolveIncident} />
 
+              {/* Allocation Success Toast Notification */}
+              {allocationSuccessMsg && (
+                <div style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#166534', padding: '10px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, boxShadow: '0 2px 8px rgba(22,101,52,0.1)' }}>
+                  {allocationSuccessMsg}
+                </div>
+              )}
+
+              {/* Allocation Transition HUD */}
+              {allocating && (
+                <div className="allocation-hud-card">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16 }}>⚡</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#93c5fd' }}>
+                        {allocationType === 'auto' ? 'AI Spatial Auto-Allocation' : 'Manual Resource Dispatch'}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 10, background: 'rgba(59, 130, 246, 0.25)', padding: '2px 8px', borderRadius: 12, color: '#60a5fa', fontWeight: 700 }}>
+                      IN PROGRESS
+                    </span>
+                  </div>
+
+                  <div className={`allocation-step-item ${allocationStep >= 1 ? (allocationStep > 1 ? 'completed' : 'active') : ''}`}>
+                    <div className="allocation-step-dot">{allocationStep > 1 ? '✓' : '1'}</div>
+                    <span>📍 Querying 2DSphere Spatial Index...</span>
+                  </div>
+
+                  <div className={`allocation-step-item ${allocationStep >= 2 ? (allocationStep > 2 ? 'completed' : 'active') : ''}`}>
+                    <div className="allocation-step-dot">{allocationStep > 2 ? '✓' : '2'}</div>
+                    <span>⚡ AI Resource Prediction & Readiness Score...</span>
+                  </div>
+
+                  <div className={`allocation-step-item ${allocationStep >= 3 ? 'active' : ''}`}>
+                    <div className="allocation-step-dot">3</div>
+                    <span>🚀 Locking Allocation & Dispatching SMS...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Resource Prediction Suggestion Banner */}
+              {predictedResource && !allocating && selectedIncident.status !== 'Assigned' && selectedIncident.status !== 'allocated' && (
+                <div className="prediction-suggestion-card">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 14 }}>🤖</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#1e40af' }}>
+                        AI Resource Prediction Suggestion
+                      </span>
+                    </div>
+                    <span className="chip chip-info" style={{ fontSize: '9px', padding: '1px 6px' }}>
+                      {predictingResource ? 'Analyzing...' : 'AI Recommended'}
+                    </span>
+                  </div>
+                  <p style={{ margin: '6px 0 0', fontSize: 12, color: '#1d4ed8', fontWeight: 700 }}>
+                    Recommended Unit: {typeIcon[predictedResource?.toLowerCase()] || '📍'} {predictedResource.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  </p>
+                  <p style={{ margin: '2px 0 0', fontSize: 11, color: '#3b82f6' }}>
+                    Top matched available units are highlighted below.
+                  </p>
+                </div>
+              )}
+
               {selectedIncident.status === 'Assigned' || selectedIncident.status === 'allocated' ? (
                 <div className="card" style={{ padding: 14, background: 'var(--blue-bg)' }}>
                   <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--blue)' }}>Response in progress</p>
@@ -793,9 +948,9 @@ function Dashboard({ onUnauthorized }) {
                       className="btn btn-primary btn-small"
                       onClick={handleAutoAllocate}
                       disabled={allocating}
-                      style={{ fontSize: '11px', padding: '5px 10px' }}
+                      style={{ fontSize: '11px', padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 4 }}
                     >
-                      🤖 Auto-Allocate
+                      {allocating && allocationType === 'auto' ? '⚡ Allocating...' : '🤖 Auto-Allocate'}
                     </button>
                   </div>
 
@@ -818,6 +973,7 @@ function Dashboard({ onUnauthorized }) {
                           distance={calculateDistance(selectedIncident, resource)}
                           onAssign={handleAssignResource}
                           assigning={allocating}
+                          isRecommended={resource.type === predictedResource}
                         />
                       ))
                     ) : (

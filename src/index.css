@@ -213,3 +213,186 @@ p {
     cursor: pointer;
   }
 }
+
+/* ==========================================================================
+   ALLOCATION & AUTO-ALLOCATION TRANSITION STYLES & RADAR ANIMATIONS
+   ========================================================================== */
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+    border-color: #3b82f6;
+  }
+  50% {
+    opacity: 0.6;
+    border-color: #60a5fa;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+    border-color: #93c5fd;
+  }
+}
+
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmerGlow {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes floatSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes stepPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+/* Allocation Radar Pulse on Map */
+.allocating-map-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70px;
+  height: 70px;
+  margin-top: -35px;
+  margin-left: -35px;
+  border-radius: 50%;
+  border: 3px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+  animation: pulseRing 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  pointer-events: none;
+}
+
+/* Allocation Map Header HUD */
+.map-allocation-hud {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: floatSlideUp 0.3s ease-out;
+}
+
+.map-allocation-hud .hud-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: radarSweep 0.8s linear infinite;
+}
+
+/* Allocation Transition Side Panel HUD */
+.allocation-hud-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 10px;
+  padding: 16px;
+  color: #fff;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  animation: floatSlideUp 0.35s ease-out;
+  margin-bottom: 12px;
+}
+
+.allocation-step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  padding: 6px 0;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+
+.allocation-step-item.active {
+  color: #60a5fa;
+  font-weight: 700;
+}
+
+.allocation-step-item.completed {
+  color: #4ade80;
+}
+
+.allocation-step-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.allocation-step-item.active .allocation-step-dot {
+  background: #2563eb;
+  border-color: #60a5fa;
+  color: #fff;
+  animation: stepPulse 1.2s infinite;
+}
+
+.allocation-step-item.completed .allocation-step-dot {
+  background: #16a34a;
+  border-color: #4ade80;
+  color: #fff;
+}
+
+/* Resource Prediction Suggestion Chip */
+.prediction-suggestion-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #2563eb;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+  animation: floatSlideUp 0.3s ease-out;
+}
+
+.recommended-resource-highlight {
+  border: 2px solid #3b82f6 !important;
+  background: #f0f7ff !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.2) !important;
+}
+

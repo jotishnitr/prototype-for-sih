@@ -396,3 +396,86 @@ p {
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.2) !important;
 }
 
+/* ==========================================================================
+   DASHBOARD VISUAL ENHANCEMENTS & MICRO-ANIMATIONS
+   ========================================================================== */
+
+.card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border, #dde3ea);
+  border-radius: var(--radius, 8px);
+  box-shadow: var(--shadow, 0 1px 3px rgba(11, 37, 69, 0.08));
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 6px 16px rgba(11, 37, 69, 0.09);
+  border-color: #cbd5e1;
+}
+
+/* Stat Cards Hover Lift */
+.dash-stat-card {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.dash-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(11, 37, 69, 0.12) !important;
+}
+
+/* Sign Out & Header Action Button Enhancements */
+.btn-signout {
+  background: #ffffff !important;
+  color: var(--navy) !important;
+  border: 1px solid var(--border) !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-signout:hover {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.12) !important;
+}
+
+/* Pulse animation for live status badge */
+@keyframes statusPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+  display: inline-block;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+/* Smooth custom scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+

@@ -535,6 +535,20 @@ function Dashboard({ onUnauthorized }) {
     }
   }
 
+  const handleSignOut = async () => {
+    try {
+      await fetch("https://resqnet-fmhd.onrender.com/api/signout", {
+        method: "POST",
+        credentials: "include"
+      })
+    } catch (err) {
+      console.warn("Sign out request error:", err)
+    } finally {
+      if (onUnauthorized) onUnauthorized()
+      navigate('/login', { replace: true })
+    }
+  }
+
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser")
@@ -737,7 +751,7 @@ function Dashboard({ onUnauthorized }) {
             <h1 style={{ fontSize: 22 }}>Authority Control Center</h1>
             <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Sector-wide incident and resource overview</p>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <button 
               className="btn btn-primary"
               onClick={() => setShowAddModal(true)}
@@ -745,7 +759,24 @@ function Dashboard({ onUnauthorized }) {
             >
               ➕ Add New Resource
             </button>
-            <span className="chip chip-low" style={{ margin: 0 }}>🟢 System Operational</span>
+            <span className="chip chip-low" style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px' }}>
+              <span className="live-pulse-dot" /> System Operational
+            </span>
+            <button 
+              className="btn btn-small btn-signout"
+              onClick={handleSignOut}
+              style={{ 
+                padding: '7px 14px', 
+                fontSize: '12px', 
+                fontWeight: 600, 
+                borderRadius: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              🚪 Sign Out
+            </button>
           </div>
         </div>
       </div>

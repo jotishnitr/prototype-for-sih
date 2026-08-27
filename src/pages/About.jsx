@@ -1,6 +1,3 @@
-import About from './pages/About.jsx'
-
-<Route path="/about" element={<About />} />
 function About() {
   return (
     <main className="container" style={{ maxWidth: 800, padding: '56px 24px 64px' }}>

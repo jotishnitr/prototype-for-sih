@@ -73,7 +73,8 @@ const postAllocate = async (req, res) => {
             resource_location: resource.location
         })
 
-        const reporterSms = await sendSms(incident.reporter_phone, `ResQNet: Resource allocated. Name: ${resource.name} Contact: ${resource.contact_phone}.`);
+        const reporterMsg = `[ResQNet Alert] Emergency unit allocated for your report. Unit: ${resource.name} | Contact: ${resource.contact_phone}. Help is on the way!`;
+        const reporterSms = await sendSms(incident.reporter_phone, reporterMsg);
         if (reporterSms && reporterSms.return) { // Fast2Sms returns 'return': true/false in response
             console.log("SMS sent successfully to reporter");
         }
@@ -85,11 +86,14 @@ const postAllocate = async (req, res) => {
             incident_id,
             jurisdiction_id,
             to: incident.reporter_phone,
-            message: `ResQNet: Resource allocated. Name: ${resource.name} Contact: ${resource.contact_phone}.`,
+            message: reporterMsg,
             status: reporterSms && reporterSms.return ? "sent" : "failed"
         });
         await smsLog1.save();
-        const resourceSms = await sendSms(resource.contact_phone, `ResQNet: Attend the incident. Reporter Contactno:${incident.reporter_phone} Incident Description :${incident.description} , Incident Location :${incident.location}`)
+
+        const locText = incident.location?.address || (typeof incident.location === 'string' ? incident.location : 'See ResQNet Portal');
+        const resourceMsg = `[ResQNet Dispatch] URGENT: Attend emergency incident (${incident.type}). Description: ${incident.description}. Location: ${locText}. Reporter Contact: ${incident.reporter_phone}.`;
+        const resourceSms = await sendSms(resource.contact_phone, resourceMsg);
         if (resourceSms && resourceSms.return) {
             console.log("SMS sent successfully to resource");
         }
@@ -101,7 +105,7 @@ const postAllocate = async (req, res) => {
             incident_id,
             jurisdiction_id,
             to: resource.contact_phone,
-            message: `ResQNet: Attend the incident. Reporter Contactno:${incident.reporter_phone} Incident Description :${incident.description} , Incident Location :${incident.location}`,
+            message: resourceMsg,
             status: resourceSms && resourceSms.return ? "sent" : "failed"
         });
         await smsLog2.save();

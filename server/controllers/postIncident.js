@@ -90,7 +90,7 @@ const postIncident = async (req, res) => {
         if (incident.reporter_phone) {
             sendSms(
                 incident.reporter_phone,
-                `ResQNet: Report received. Incident ID: ${incident._id}. Help is on the way.`
+                `[ResQNet Alert] Emergency report received successfully (Ref: ${incident._id}). Responders are being dispatched. Stay safe!`
             ).catch(smsErr => console.error("Non-blocking SMS error:", smsErr.message));
         }
 

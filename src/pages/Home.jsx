@@ -139,6 +139,119 @@ function Home() {
         </div>
       </section>
 
+      {/* Footer */}
+      <footer
+        style={{
+          background: "#0a1f3d",
+          color: "rgba(255,255,255,0.7)",
+          padding: "50px 0 25px",
+          fontSize: 14,
+          marginTop: 40,
+        }}
+      >
+        <div className="container">
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "space-between",
+              gap: 40,
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              paddingBottom: 40,
+              marginBottom: 25,
+            }}
+          >
+            {/* Brand Info */}
+            <div style={{ maxWidth: 320 }}>
+              <strong
+                style={{
+                  color: "#fff",
+                  fontSize: 20,
+                  display: "block",
+                  marginBottom: 15,
+                  letterSpacing: 0.5,
+                }}
+              >
+                ResQNet
+              </strong>
+              <p style={{ margin: 0, lineHeight: 1.6 }}>
+                A centralized platform for disaster management, connecting citizens with emergency responders for rapid, organized action.
+              </p>
+            </div>
+
+            {/* Navigation Links */}
+            <div style={{ display: "flex", gap: 60, flexWrap: "wrap" }}>
+              <div>
+                <strong
+                  style={{
+                    color: "#fff",
+                    display: "block",
+                    marginBottom: 15,
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                  }}
+                >
+                  Platform
+                </strong>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <Link to="/report" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+                    Report Incident
+                  </Link>
+                  <Link to="/dashboard" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+                    Live Dashboard
+                  </Link>
+                  <Link to="/about" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+                    About Us
+                  </Link>
+                </div>
+              </div>
+
+              <div>
+                <strong
+                  style={{
+                    color: "#fff",
+                    display: "block",
+                    marginBottom: 15,
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                  }}
+                >
+                  Legal
+                </strong>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <Link to="/privacy" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+                    Privacy Policy
+                  </Link>
+                  <Link to="/terms" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+                    Terms of Service
+                  </Link>
+                  <a href="mailto:support@resqnet.example" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+                    Contact Support
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Copyright Area */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 15,
+              fontSize: 12.5,
+            }}
+          >
+            <span>&copy; {new Date().getFullYear()} @2026 ResQNet. All rights reserved. Made by Team Altiora</span>
+            <span>PS-05 · Disaster Management</span>
+          </div>
+        </div>
+      </footer>
+
       <style>{`
         @media (max-width: 860px) {
           .hero-grid {

@@ -1,480 +1,221 @@
-# 🚨 ResQNet - AI-Powered Disaster Response & Resource Coordination Platform
+# 🚨 ResQNet — Real-Time Disaster Early-Warning & Resource Coordination Platform
 
-> Real-time disaster early warning, intelligent resource allocation, and emergency response coordination platform built for disaster management authorities.
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://resqnet-gamma.vercel.app)
+[![Backend](https://img.shields.io/badge/Backend-Render-blue)](https://resqnet-fmhd.onrender.com)
+[![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-green?logo=node.js)](https://nodejs.org)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)](https://mongodb.com)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-RealTime-black?logo=socketdotio)](https://socket.io)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
-![React](https://img.shields.io/badge/React-19-blue?logo=react)
-![Node.js](https://img.shields.io/badge/Node.js-Express-green?logo=node.js)
-![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)
-![Socket.IO](https://img.shields.io/badge/Socket.IO-RealTime-black?logo=socketdotio)
-![Leaflet](https://img.shields.io/badge/Leaflet-Maps-brightgreen?logo=leaflet)
-![License](https://img.shields.io/badge/License-MIT-blue)
+> Built for **NIT Rourkela Internal Hackathon 2026** by **Team Altiora**
 
----
-
-## 📌 Overview
-
-ResQNet is an AI-powered disaster management platform designed to bridge the communication gap between citizens and disaster response authorities during emergencies such as floods, cyclones, landslides, fires, and medical crises.
-
-The platform enables citizens to report incidents in real time while providing authorities with an intelligent dashboard that automatically prioritizes incidents, recommends suitable rescue resources, visualizes disaster hotspots, and coordinates rescue operations.
+🌐 **Live:** https://resqnet-gamma.vercel.app &nbsp;|&nbsp; 🔐 **Demo Login:** `rajesh@ndrf.gov.in` / `Test@1234`
 
 ---
 
-# ✨ Key Features
+## 📌 Problem Statement
 
-## 🚨 Citizen Incident Reporting
+**Theme:** Disaster Management | **Category:** Software
 
-- Report disasters with precise geo-location
-- AI-powered incident severity prediction
-- AI resource recommendation
-- Upload incident images
-- Detailed incident descriptions
-- Real-time submission
+During floods, cyclones, and landslides, delayed information flow between citizens, NDRF, and local administration causes poor resource allocation and slower rescue response.
 
-Supported incident types:
-
-- Flood
-- Landslide
-- Fire
-- Medical Emergency
-- Road Accident
-- Building Collapse
-- Cyclone
-- Other Emergencies
+**ResQNet** solves this by building a unified platform that aggregates citizen-reported incidents (geo-tagged), shelter/resource availability, and provides a real-time coordination dashboard for disaster management authorities to allocate rescue teams and relief supplies instantly.
 
 ---
 
-## 🧠 AI-Powered Emergency Analysis
+## ✅ Expected Outcomes — Delivered
 
-Integrated AI analyzes every incoming incident to provide:
+| Outcome | Status |
+|---|---|
+| Citizen reporting app (geo-tagged, photo, text) | ✅ Implemented |
+| Live authority dashboard with heatmap | ✅ Implemented |
+| Resource/shelter allocation optimizer | ✅ Implemented |
+| SMS fallback for no-internet zones | ✅ Implemented |
+| AI severity prediction & resource recommendation | ✅ Implemented |
 
-- Severity Prediction
-- Required Resource Recommendation
-- Priority Classification
-- Emergency Response Suggestions
+---
 
-Example:
+## ✨ Key Features
+
+### 🧠 AI-Powered Incident Analysis
+Every incident is analyzed by AI (Gemini + OpenRouter fallback) for:
+- Automatic severity prediction (1–5 scale)
+- Optimal resource type recommendation
+- Multi-model fallback chain for reliability
+
+### 🗺️ Live Coordination Map
+- Real-time incident pins colored by severity
+- Resource pins (rescue teams, shelters, medical units, supply depots)
+- Allocation lines drawn live between incident and dispatched resource
+- Heatmap overlay showing disaster hotspot density
+
+### ⚡ Auto Resource Allocation Engine
+- MongoDB `$near` geospatial query finds nearest available resource
+- AI recommends best resource type before nearest-neighbor search
+- Atomic `findOneAndUpdate` prevents race conditions
+- WebSocket broadcasts allocation to all officers in jurisdiction instantly
+
+### 📡 Real-Time WebSocket Updates
+- New incidents appear on map without page refresh
+- Allocation lines draw live when resource dispatched
+- High-priority alert feed updates in real time
+- Jurisdiction-isolated rooms — each district sees only its data
+
+### 📱 SMS Fallback
+- Citizen receives SMS confirmation after incident report
+- Resource team receives SMS with incident location on dispatch
+- Handles no-internet zone communication via Fast2SMS
+
+### 🏛️ Jurisdiction Isolation
+- Each authority officer tied to a geographic jurisdiction
+- Data filtered automatically — Puri officer sees only Puri incidents
+- Admin role gets cross-jurisdiction view for NDRF HQ
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, Vite, Tailwind CSS, Leaflet, Socket.IO Client |
+| Backend | Node.js, Express.js, Socket.IO |
+| Database | MongoDB + Mongoose (2dsphere geospatial index) |
+| AI | Google Gemini, OpenRouter (Nvidia Nemotron fallback) |
+| Maps | OpenStreetMap, Leaflet, Leaflet.heat |
+| Weather | OpenWeather API |
+| SMS | Fast2SMS |
+| Deployment | Render (backend), Vercel (frontend) |
+
+---
+
+## 🏗 System Architecture
 
 ```
-Flood Report
-
-↓
-
-AI Severity: Critical
-
-↓
-
-Recommended Resource:
-• Rescue Boat
-• Medical Team
-• NDRF Unit
-
-↓
-
-Auto Allocation
-```
-
----
-
-## 🗺️ Interactive Disaster Map
-
-Authority dashboard provides three different visualization modes:
-
-### Reports
-
-- Live incident markers
-- Severity-based colors
-- Incident details
-- Image preview
-
-### Resources
-
-- Rescue teams
-- Medical units
-- Shelters
-- Relief stock
-- Available resources
-
-### Heatmap
-
-AI-weighted disaster hotspot visualization showing high-risk regions based on incident density and severity.
-
----
-
-## 🤖 Automatic Resource Allocation
-
-Core feature of ResQNet.
-
-When a new incident is reported, the system:
-
-- Finds compatible rescue resources
-- Calculates nearest available units
-- Estimates response time
-- Suggests optimal allocation
-- Displays assigned resource on the map
-
-Authorities can:
-
-- Auto Allocate
-- Manually Assign Resources
-
----
-
-## 📡 Real-Time Dashboard
-
-Live operational dashboard displaying:
-
-- Active Incidents
-- Units Dispatched
-- Shelter Occupancy
-- Estimated Response Time
-- High Priority Alerts
-- Resource Readiness
-- Weather Conditions
-
-Updates occur instantly using Socket.IO.
-
----
-
-## 🔥 Live Heatmap
-
-Severity Weighting:
-
-| Severity | Weight |
-|----------|--------|
-| Low | 0.3 |
-| Medium | 0.5 |
-| High | 0.8 |
-| Critical | 1.0 |
-
----
-
-## 🏥 Shelter Management
-
-Track shelters including:
-
-- Capacity
-- Occupancy
-- Available Beds
-- Medical Support
-- Food Availability
-
----
-
-## 🚑 Resource Management
-
-Manage available emergency resources:
-
-- Rescue Teams
-- Ambulances
-- Medical Units
-- Rescue Boats
-- Fire Brigades
-- Police Units
-- Relief Supplies
-
-Each resource maintains:
-
-- Availability
-- Current Assignment
-- Location
-- Distance
-- Operational Status
-
----
-
-## 🌦 Live Weather Information
-
-Integrated weather monitoring provides:
-
-- Temperature
-- Weather Condition
-- Wind Speed
-- Rainfall
-- Disaster Risk Indicator
-
----
-
-## 🔔 High Priority Alert Feed
-
-Real-time emergency notifications including:
-
-- Critical Incidents
-- Resource Deployment
-- Shelter Updates
-- Weather Alerts
-- Incident Resolution
-
----
-
-## 📈 Resource Readiness Dashboard
-
-Monitor emergency preparedness across:
-
-### Shelter & Evacuation
-
-- Shelter Space
-- Rescue Personnel
-- Boats & Vehicles
-
-### Medical Operations
-
-- Medical Units
-- Ambulance Fleet
-- Hospital Beds
-- Medical Staff
-
-### Relief Stockpile
-
-- Food Packets
-- Clean Water
-- Medicine Kits
-- Blankets
-
----
-
-## 🛰️ Live Incident Tracking
-
-Authorities can:
-
-- View incident details
-- Monitor incident status
-- Assign rescue resources
-- Resolve incidents
-- Monitor response progress
-
----
-
-# 🧩 System Architecture
-
-```
-Citizen
-
-      │
-
-      ▼
-
-Incident Report
-
-      │
-
-      ▼
-
-Backend API
-
-      │
-
-      ▼
-
-AI Analysis
-• Severity Prediction
-• Resource Recommendation
-
-      │
-
-      ▼
-
-Database
-
-      │
-
-      ▼
-
-Auto Allocation Engine
-
-      │
-
-      ▼
-
-Authority Dashboard
-
-      │
-
-      ▼
-
-Real-Time Updates (Socket.IO)
+Citizen Reports Incident (geo-tagged, photo, description)
+           │
+           ▼
+    Backend API (Node.js/Express)
+           │
+           ├── AI Analysis (Gemini → OpenRouter fallback)
+           │      ├── Severity Prediction (1–5)
+           │      └── Resource Type Recommendation
+           │
+           ├── MongoDB (2dsphere indexed)
+           │      ├── Incident stored with jurisdiction_id
+           │      └── $near query → nearest available resource
+           │
+           ├── Auto Allocation Engine
+           │      └── Atomic findOneAndUpdate (race-condition safe)
+           │
+           ├── SMS Notification (Fast2SMS)
+           │      ├── Citizen confirmation
+           │      └── Resource team dispatch alert
+           │
+           └── WebSocket Broadcast (Socket.IO)
+                  └── jurisdiction:OD-PURI room → all authority dashboards
+                         ├── incident:new → pin drops on map
+                         ├── allocation:created → line draws on map
+                         └── alert:new → feed updates
 ```
 
 ---
 
-# 🛠 Tech Stack
-
-## Frontend
-
-- React 19
-- Vite
-- React Router
-- Tailwind CSS
-- Leaflet
-- React Leaflet
-- Leaflet Heat
-- Socket.IO Client
-
----
-
-## Backend
-
-- Node.js
-- Express.js
-- Socket.IO
-- REST API
-
----
-
-## Database
-
-- MongoDB
-
----
-
-## AI Integration
-
-- AI Severity Prediction
-- AI Resource Recommendation
-- Intelligent Priority Analysis
-
----
-
-## Maps & GIS
-
-- OpenStreetMap
-- Leaflet
-- Heatmap Visualization
-
----
-
-## Weather API
-
-- OpenWeather API
-
----
-
-# ⚡ Real-Time Features
-
-- Live Incident Reporting
-- Socket.IO Updates
-- Auto Dashboard Refresh
-- Live Resource Status
-- Live Alerts
-- Heatmap Updates
-- Instant Allocation Updates
-
----
-
-# 📂 Project Structure
-
-```
-ResQNet/
-│
-├── client/
-│   ├── src/
-│   ├── public/
-│   └── package.json
-│
-├── server/
-│   ├── controllers/
-│   ├── routes/
-│   ├── models/
-│   ├── sockets/
-│   ├── middleware/
-│   ├── utils/
-│   └── package.json
-│
-└── README.md
-```
-
----
-
-# 🚀 Getting Started
-
-## Clone Repository
+## 🚀 Getting Started
 
 ```bash
 git clone https://github.com/jotishnitr/prototype-for-sih.git
 cd prototype-for-sih
 ```
 
----
-
-## Install Dependencies
-
-### Frontend
-
-```bash
-cd client
-npm install
-```
-
 ### Backend
-
 ```bash
 cd server
 npm install
 ```
 
----
-
-## Environment Variables
-
-Create a `.env` file inside the `server` directory.
-
+Create `server/.env`:
 ```env
-PORT=5000
-
-MONGODB_URI=your_mongodb_uri
-
-JWT_SECRET=your_secret
-
-OPENWEATHER_API_KEY=your_openweather_api_key
-
-GEMINI_API_KEY=your_gemini_api_key
+MONGO_URI=your_mongodb_uri
+ACCESS_TOKEN_SECRET=your_secret
+REFRESH_TOKEN_SECRET=your_secret
+FAST2SMS_API_KEY=your_key
+GEMINI_API_KEY=your_key
+OPENROUTER_API_KEY=your_key
 ```
 
----
-
-## Run Development Server
-
-### Backend
-
 ```bash
-cd server
-npm run dev
+npm start
 ```
 
 ### Frontend
-
 ```bash
 cd client
+npm install
 npm run dev
 ```
 
 ---
 
+## 🔐 Demo Access
 
-
-# 🎯 Future Enhancements
-
-- GPS Live Tracking for Rescue Teams
-- Route Optimization
-- SMS & IVR Support
-- Offline Incident Reporting
-- Drone Surveillance Integration
-- IMD Disaster Alert Integration
-- Predictive Disaster Analytics
-- Multi-Language Support
-- Mobile Application
+| Field | Value |
+|---|---|
+| URL | https://resqnet-gamma.vercel.app/dashboard |
+| Email | rajesh@ndrf.gov.in |
+| Password | Test@1234 |
 
 ---
 
-# 👥 Team
+## 📂 Project Structure
 
-Developed for an Internal Hackathon at **National Institute of Technology Rourkela**.
+```
+ResQNet/
+├── client/                  # React frontend
+│   └── src/
+│       ├── components/      # MapView, StatsCard, AlertCard
+│       ├── pages/           # Dashboard, Report, Home
+│       └── data/            # mockData fallbacks
+│
+└── server/                  # Node.js backend
+    ├── controllers/         # postIncident, autoAllocate, getStats...
+    ├── routes/              # Express route definitions
+    ├── models/              # Mongoose schemas
+    ├── utils/               # gemini, openrouter, sendSms, wsEvents
+    └── middlewares/         # auth (JWT verify)
+```
 
 ---
 
-# 📄 License
+## 🎯 Future Enhancements
 
-This project is licensed under the MIT License.
+- GPS live tracking for rescue teams
+- Google Maps Distance Matrix for road-aware allocation
+- Inbound SMS (citizen texts keyword → incident auto-created)
+- IMD RSS feed → auto-generate incidents from weather alerts
+- Cross-jurisdiction resource sharing with neighbor alert system
+- Mobile application (React Native)
+- Multi-language support for regional languages
 
 ---
 
-## ⭐ If you found this project useful, consider giving it a star.
+## 👥 Team Altiora — NIT Rourkela
+
+| Name | Role |
+|---|---|
+| D. Jotish Kumar | Backend & Database |
+| Aryan Biswal | Frontend Development |
+| Nihal Kumar | Frontend Development |
+| Parjanya Soni | Research & Testing |
+| Charan Hadaginal | Research & Testing |
+| Nikita Kumari | Designer |
+
+---
+
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+⭐ If ResQNet helped you, consider giving it a star.

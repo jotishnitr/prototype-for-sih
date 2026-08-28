@@ -26,12 +26,13 @@ Rules:
 Reply with ONLY a single digit between 1 and 5. No explanation. No punctuation.`;
 
 const openrouterModels = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "meta-llama/llama-3.1-8b-instruct:free",
-    "google/gemma-2-9b-it:free",
-    "mistralai/mistral-7b-instruct:free",
-    "qwen/qwen-2.5-7b-instruct:free",
-    "deepseek/deepseek-r1:free"
+    "openrouter/auto",
+    "google/gemini-2.0-flash-lite-001:free",
+    "google/gemini-2.0-flash-exp:free",
+    "qwen/qwen-2.5-coder-32b-instruct:free",
+    "deepseek/deepseek-r1-distill-llama-70b:free",
+    "meta-llama/llama-3.2-11b-vision-instruct:free",
+    "mistralai/mistral-small-24b-instruct-2501:free"
 ];
 
 const parseSeverity = (text) => {

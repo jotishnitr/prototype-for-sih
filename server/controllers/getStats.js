@@ -38,8 +38,8 @@ const getStats = async (req, res) => {
         const shelterCapacity = `${occupancyPercent}%`;
 
         // calculating estResponse ( T.C - O(2n) )
-        const userIncidents = await Incident.find({ jurisdiction_id: jurisdictionId })
-        const userAllocations = await Allocation.find({ jurisdiction_id: jurisdictionId })
+        const userIncidents = await Incident.find({ jurisdiction_id: jurisdictionId });
+        const userAllocations = await Allocation.find({ jurisdiction_id: jurisdictionId });
 
         // Build a lookup map for allocation creation times: incident_id -> createdAt
         const allocationMap = new Map();
@@ -50,18 +50,22 @@ const getStats = async (req, res) => {
         });
 
         let estResponse = 0;
+        let validCount = 0;
+
         userIncidents.forEach(incident => {
             const allocTime = allocationMap.get(incident._id.toString());
-            if (allocTime) {
-                // Allocation time (later) - Incident creation time (earlier)
-                estResponse += (allocTime - incident.createdAt);
+            if (allocTime && incident.createdAt) {
+                const diffMs = new Date(allocTime).getTime() - new Date(incident.createdAt).getTime();
+                if (diffMs > 0) {
+                    estResponse += diffMs;
+                    validCount++;
+                }
             }
         });
-        const avgResponse = userIncidents.length > 0
-            ? (estResponse / allocationMap.size) / 60000
-            : 0;
 
-        // return avgResponse not estResponse
+        const avgResponse = validCount > 0
+            ? Number((estResponse / validCount / 60000).toFixed(1))
+            : null;
 
         return res.status(200).json({
             activeIncidents,

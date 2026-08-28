@@ -142,7 +142,7 @@ function Dashboard({ onUnauthorized }) {
         const cap = data.shelterCapacity
         const formattedCap = typeof cap === 'string' && cap.includes('%') ? cap : (cap != null ? `${cap}%` : '0%')
         setShelterCapacity(formattedCap)
-        setEstResponse(data.avgResponse ?? 0)
+        setEstResponse(data.avgResponse ?? null)
       }
     } catch (err) {
       console.warn("Could not load live stats from server:", err)
@@ -789,7 +789,7 @@ function Dashboard({ onUnauthorized }) {
           <StatsCard label="Shelter Occupancy" value={shelterCapacity} accent="var(--orange)" />
           <StatsCard 
             label="Est. Response" 
-            value={typeof estResponse === 'number' ? `${estResponse.toFixed(1)} mins` : `${parseFloat(estResponse || 0).toFixed(1)} mins`} 
+            value={(estResponse != null && !isNaN(Number(estResponse))) ? `${Number(estResponse).toFixed(1)} mins` : 'N/A'} 
             accent="var(--green)" 
           />
         </div>

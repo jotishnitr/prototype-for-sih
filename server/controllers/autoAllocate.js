@@ -33,9 +33,9 @@ const autoAllocate = async (req, res) => {
             console.error("Resource prediction error in autoAllocate:", predErr);
         }
 
-        let resource = null;
+        let candidateResource = null;
         if (predicted_resource) {
-            resource = await Resource.findOne({
+            candidateResource = await Resource.findOne({
                 jurisdiction_id: jurisdiction_id,
                 status: 'available',
                 type: predicted_resource,
@@ -51,8 +51,8 @@ const autoAllocate = async (req, res) => {
         }
 
         // Fallback: If no unit of predicted type is available, allocate closest available unit of any type in jurisdiction
-        if (!resource) {
-            resource = await Resource.findOne({
+        if (!candidateResource) {
+            candidateResource = await Resource.findOne({
                 jurisdiction_id: jurisdiction_id,
                 status: 'available',
                 location: {
@@ -66,8 +66,18 @@ const autoAllocate = async (req, res) => {
             });
         }
 
-        if (!resource) {
+        if (!candidateResource) {
             return res.status(404).json({ message: "No available resources found in this sector" });
+        }
+
+        const resource = await Resource.findOneAndUpdate(
+            { _id: candidateResource._id, status: 'available' },
+            { $set: { status: 'deployed' } },
+            { new: true }
+        );
+
+        if (!resource) {
+            return res.status(409).json({ message: 'Resource already allocated or unavailable' });
         }
 
         const allocation = new Allocation({
@@ -79,7 +89,6 @@ const autoAllocate = async (req, res) => {
         });
         await allocation.save();
 
-        resource.status = 'deployed';
         if (resource.type === 'rescue_team' && resource.rescue_team) {
             resource.rescue_team.available_members = 0;
             resource.rescue_team.available_boats = 0;

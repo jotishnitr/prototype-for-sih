@@ -10,12 +10,11 @@ const getIncidentDetails = async (req, res) => {
 
         const jurisdictionId = user.jurisdiction_id;
 
-        if (!jurisdictionId) {
-            return res.status(403).json({ message: 'No jurisdiction assigned to user' });
-        }
+        const query = (user.role === 'admin') ? {} : { jurisdiction_id: jurisdictionId };
+
         // Fetch plain JS objects using .lean() so we can add new properties directly
-        const incidents = await Incident.find({ jurisdiction_id: jurisdictionId }).lean();
-        const resources = await Resource.find({ jurisdiction_id: jurisdictionId }).lean();
+        const incidents = await Incident.find(query).lean();
+        const resources = await Resource.find(query).lean();
 
         // Map resources by ID for O(1) lookups
         const resourcesMap = new Map();

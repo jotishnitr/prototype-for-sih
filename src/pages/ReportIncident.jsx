@@ -193,78 +193,135 @@ function ReportIncident() {
     setAiProvider('')
   }
 
-  function handleDownloadReport() {
+  function handleDownloadImage() {
     const reportId = createdIncidentId || 'INC-EMERGENCY';
-    const content = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>ResQNet Emergency Incident Report - ${reportId}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 32px; color: #0f172a; max-width: 720px; margin: 0 auto; line-height: 1.6; }
-    .header { border-bottom: 3px solid #2fa860; padding-bottom: 16px; margin-bottom: 24px; text-align: center; }
-    .title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; }
-    .code { background: #e2e8f0; color: #1e293b; padding: 4px 10px; borderRadius: 6px; font-weight: bold; font-family: monospace; font-size: 15px; }
-    .badge { background: #0f172a; color: #38bdf8; padding: 12px 18px; border-radius: 8px; margin: 20px 0; font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-    .section { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
-    .section h3 { margin: 0 0 12px 0; color: #b91c1c; font-size: 15px; font-weight: 700; }
-    .suggestions { background: #f0f9ff; border-color: #bae6fd; }
-    .suggestions h3 { color: #0369a1; }
-    ul { margin: 0; padding-left: 20px; font-size: 13.5px; color: #334155; }
-    li { margin-bottom: 8px; }
-    .footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1 class="title">🚨 ResQNet Emergency Incident Report</h1>
-    <p style="margin: 6px 0 0 0; color: #64748b; font-size: 14px;">
-      Incident Reference Code: <span class="code">${reportId}</span>
-    </p>
-    <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 12px;">Generated: ${new Date().toLocaleString()}</p>
-  </div>
+    const width = 760;
 
-  ${estResponseTime != null ? `
-  <div class="badge">
-    <span>⏱️ Estimated Response Time: <strong style="color: #4ade80;">~${estResponseTime} Minutes</strong></span>
-    <span>⚡ ${aiProvider || 'ResQNet Intelligence Engine'}</span>
-  </div>
-  ` : ''}
+    const precCount = precautionsList.length || 0;
+    const suggCount = suggestionsList.length || 0;
+    const baseHeight = 220 + (precCount * 50) + (suggCount * 50) + 70;
+    const height = Math.max(520, baseHeight);
 
-  ${precautionsList.length > 0 ? `
-  <div class="section">
-    <h3>🛡️ Immediate Citizen Safety Precautions</h3>
-    <ul>
-      ${precautionsList.map(p => `<li>${p}</li>`).join('')}
-    </ul>
-  </div>
-  ` : ''}
+    const canvas = document.createElement('canvas');
+    const scale = 2;
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
 
-  ${suggestionsList.length > 0 ? `
-  <div class="section suggestions">
-    <h3>⚡ Operational Dispatch Action Steps</h3>
-    <ul>
-      ${suggestionsList.map(s => `<li>${s}</li>`).join('')}
-    </ul>
-  </div>
-  ` : ''}
+    // Background Card
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
 
-  <div class="footer">
-    Transmitted to ResQNet Emergency Control Room & Live Spatial Dispatch Radar.<br>
-    Keep this report for your offline emergency records.
-  </div>
-</body>
-</html>`;
+    // Top Green Border
+    ctx.fillStyle = '#2fa860';
+    ctx.fillRect(0, 0, width, 8);
 
-    const blob = new Blob([content], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `ResQNet-Emergency-Report-${reportId}.html`;
+    // Header Title
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🚨 ResQNet Emergency Incident Report', width / 2, 48);
+
+    // Incident Code & Date
+    ctx.fillStyle = '#64748b';
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText(`Incident Reference Code: ${reportId}   |   ${new Date().toLocaleString()}`, width / 2, 74);
+
+    // Response Time Badge
+    if (estResponseTime != null) {
+      ctx.fillStyle = '#0f172a';
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(40, 95, width - 80, 44, 8);
+        ctx.fill();
+      } else {
+        ctx.fillRect(40, 95, width - 80, 44);
+      }
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`⏱️ Estimated Response Time: ~${estResponseTime} Minutes`, 60, 122);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`⚡ ${aiProvider || 'ResQNet Intelligence Engine'}`, width - 60, 122);
+    }
+
+    let y = estResponseTime != null ? 168 : 115;
+
+    function wrapText(text, x, startY, maxWidth, lineHeight) {
+      const words = String(text || '').split(' ');
+      let line = '';
+      let currentY = startY;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          ctx.fillText(line, x, currentY);
+          line = words[n] + ' ';
+          currentY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, currentY);
+      return currentY + lineHeight;
+    }
+
+    // Precautions Section
+    if (precautionsList.length > 0) {
+      ctx.fillStyle = '#b91c1c';
+      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('🛡️ Immediate Citizen Safety Precautions', 40, y);
+      y += 24;
+
+      ctx.font = '13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      precautionsList.forEach((prec) => {
+        ctx.fillStyle = '#b91c1c';
+        ctx.fillText('•', 45, y);
+        ctx.fillStyle = '#334155';
+        y = wrapText(prec, 60, y, width - 110, 19);
+        y += 4;
+      });
+      y += 16;
+    }
+
+    // Suggestions Section
+    if (suggestionsList.length > 0) {
+      ctx.fillStyle = '#0369a1';
+      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('⚡ Operational Dispatch Action Steps', 40, y);
+      y += 24;
+
+      ctx.font = '13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      suggestionsList.forEach((sugg) => {
+        ctx.fillStyle = '#0369a1';
+        ctx.fillText('•', 45, y);
+        ctx.fillStyle = '#334155';
+        y = wrapText(sugg, 60, y, width - 110, 19);
+        y += 4;
+      });
+      y += 16;
+    }
+
+    // Footer
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Transmitted to ResQNet Emergency Control Room & Live Spatial Dispatch Radar.', width / 2, y + 20);
+
+    const pngUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = pngUrl;
+    link.download = `ResQNet-Emergency-Report-${reportId}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   }
 
   if (submitted) {
@@ -370,10 +427,10 @@ function ReportIncident() {
             <button
               type="button"
               className="btn btn-outline"
-              onClick={handleDownloadReport}
+              onClick={handleDownloadImage}
               style={{ padding: '10px 18px', fontSize: 14, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8 }}
             >
-              📥 Download Emergency Report
+              📥 Download Report (Image)
             </button>
             <button
               type="button"

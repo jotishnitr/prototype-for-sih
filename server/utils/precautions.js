@@ -286,7 +286,7 @@ const precautions = async (reqOrParams, res) => {
     // 1. Preference 1: Try Gemini (with 3.5s timeout)
     try {
         const geminiPromise = gemini.models.generateContent({
-            model: 'gemini-flash-latest',
+            model: 'gemini-2.5-flash',
             contents: promptText
         });
         const geminiRes = await withTimeout(geminiPromise, 3500, "Gemini AI");

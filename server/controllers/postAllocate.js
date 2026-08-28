@@ -12,16 +12,25 @@ const postAllocate = async (req, res) => {
     try {
         const io = req.app.get('io');
         const { resource_id, incident_id } = req.body;
-        const resource = await Resource.findById(resource_id);
         const incident = await Incident.findById(incident_id);
+        if (!incident) {
+            return res.status(404).json({ message: "Incident not found" });
+        }
+
+        const resource = await Resource.findOneAndUpdate(
+            { _id: resource_id, status: 'available' },
+            { $set: { status: 'deployed' } },
+            { new: true }
+        );
+
+        if (!resource) {
+            return res.status(409).json({ message: 'Resource already allocated or unavailable' });
+        }
+
         const userId = req.user.id;
         const user = await User.findById(userId);
         const jurisdiction_id = user.jurisdiction_id;
-        if (!resource || !incident) {
-            return res.status(404).json({ message: "Resource or Incident not found" });
-        }
 
-        resource.status = 'deployed';
         if (resource.type === 'rescue_team' && resource.rescue_team) {
             resource.rescue_team.available_members = 0;
             resource.rescue_team.available_boats = 0;

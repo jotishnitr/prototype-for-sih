@@ -15,10 +15,10 @@ const postIncident = async (req, res) => {
         let finalSeverity = severity;
         if (finalSeverity == null || finalSeverity === '') {
             try {
-                // 3.5 second timeout guard for AI severity prediction
+                // 6.5 second timeout guard for AI severity prediction
                 const predictionPromise = severityPrediction(req);
                 const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Severity prediction timeout")), 3500)
+                    setTimeout(() => reject(new Error("Severity prediction timeout")), 6500)
                 );
                 finalSeverity = await Promise.race([predictionPromise, timeoutPromise]);
             } catch (predErr) {

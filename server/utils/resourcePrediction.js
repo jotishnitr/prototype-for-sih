@@ -1,18 +1,25 @@
 const gemini = require('./gemini');
+const groq = require('./groq');
 const openrouter = require('./openrouter');
 
 const geminiModels = [
     'gemini-flash-latest'
 ];
 
+const groqModels = [
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it"
+];
+
 const openrouterModels = [
-    "openrouter/auto",
-    "google/gemini-2.0-flash-lite-001:free",
     "google/gemini-2.0-flash-exp:free",
-    "qwen/qwen-2.5-coder-32b-instruct:free",
-    "deepseek/deepseek-r1-distill-llama-70b:free",
-    "meta-llama/llama-3.2-11b-vision-instruct:free",
-    "mistralai/mistral-small-24b-instruct-2501:free"
+    "meta-llama/llama-3.1-8b-instruct:free",
+    "mistralai/mistral-7b-instruct:free",
+    "qwen/qwen-2.5-7b-instruct:free",
+    "google/gemma-3-12b-it:free"
 ];
 
 const validTypes = ['rescue_team', 'medical_unit', 'shelter', 'supply_depot'];
@@ -90,7 +97,27 @@ const resourcePrediction = async (req, res) => {
         }
     }
 
-    // Fallback: Try OpenRouter models loop with 3s timeout
+    // Secondary: Try Groq models loop with 3s timeout
+    if (!predicted) {
+        for (const model of groqModels) {
+            try {
+                const groqPromise = groq.chat.completions.create({
+                    model: model,
+                    messages: [
+                        { role: 'user', content: resourcePrompt(description, type, severity) }
+                    ]
+                });
+                const completion = await withTimeout(groqPromise, 3000, `Groq (${model})`);
+                const text = completion.choices?.[0]?.message?.content;
+                predicted = parseResourceType(text);
+                if (predicted) break;
+            } catch (groqError) {
+                console.warn(`Groq model ${model} failed or timed out:`, groqError.message);
+            }
+        }
+    }
+
+    // Tertiary: Try OpenRouter models loop with 3s timeout
     if (!predicted) {
         for (const model of openrouterModels) {
             try {

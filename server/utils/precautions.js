@@ -303,7 +303,13 @@ const precautions = async (reqOrParams, res) => {
 
     // 2. Preference 2: Try Groq (with 3.5s timeout per model)
     if (!aiProviderUsed) {
-        const groqModels = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"];
+        const groqModels = [
+            "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile",
+            "llama3-70b-8192",
+            "mixtral-8x7b-32768",
+            "gemma2-9b-it"
+        ];
         for (const model of groqModels) {
             try {
                 const groqPromise = groq.chat.completions.create({
@@ -328,13 +334,11 @@ const precautions = async (reqOrParams, res) => {
     // 3. Preference 3: Try OpenRouter (with 3.5s timeout per model)
     if (!aiProviderUsed) {
         const openrouterModels = [
-            "openrouter/auto",
-            "google/gemini-2.0-flash-lite-001:free",
             "google/gemini-2.0-flash-exp:free",
-            "qwen/qwen-2.5-coder-32b-instruct:free",
-            "deepseek/deepseek-r1-distill-llama-70b:free",
-            "meta-llama/llama-3.2-11b-vision-instruct:free",
-            "mistralai/mistral-small-24b-instruct-2501:free"
+            "meta-llama/llama-3.1-8b-instruct:free",
+            "mistralai/mistral-7b-instruct:free",
+            "qwen/qwen-2.5-7b-instruct:free",
+            "google/gemma-3-12b-it:free"
         ];
         for (const model of openrouterModels) {
             try {

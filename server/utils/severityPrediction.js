@@ -1,4 +1,5 @@
 const gemini = require('./gemini');
+const groq = require('./groq');
 const openrouter = require('./openrouter');
 
 const severityPrompt = (description, type) =>
@@ -25,14 +26,20 @@ Rules:
 
 Reply with ONLY a single digit between 1 and 5. No explanation. No punctuation.`;
 
+const groqModels = [
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it"
+];
+
 const openrouterModels = [
-    "openrouter/auto",
-    "google/gemini-2.0-flash-lite-001:free",
     "google/gemini-2.0-flash-exp:free",
-    "qwen/qwen-2.5-coder-32b-instruct:free",
-    "deepseek/deepseek-r1-distill-llama-70b:free",
-    "meta-llama/llama-3.2-11b-vision-instruct:free",
-    "mistralai/mistral-small-24b-instruct-2501:free"
+    "meta-llama/llama-3.1-8b-instruct:free",
+    "mistralai/mistral-7b-instruct:free",
+    "qwen/qwen-2.5-7b-instruct:free",
+    "google/gemma-3-12b-it:free"
 ];
 
 const parseSeverity = (text) => {
@@ -68,10 +75,28 @@ const severityPrediction = async (req) => {
         const predicted = parseSeverity(text);
         if (predicted) return predicted;
     } catch (geminiError) {
-        console.warn("Gemini severity prediction failed or timed out, falling back to OpenRouter:", geminiError.message);
+        console.warn("Gemini severity prediction failed or timed out, trying Groq:", geminiError.message);
     }
 
-    // Fallback: Try OpenRouter models with 3s timeout per model
+    // Secondary: Try Groq models with 3s timeout
+    for (const model of groqModels) {
+        try {
+            const groqPromise = groq.chat.completions.create({
+                model: model,
+                messages: [
+                    { role: 'user', content: severityPrompt(description, incidentType) }
+                ]
+            });
+            const completion = await withTimeout(groqPromise, 3000, `Groq (${model})`);
+            const text = completion.choices?.[0]?.message?.content;
+            const predicted = parseSeverity(text);
+            if (predicted) return predicted;
+        } catch (groqError) {
+            console.warn(`Groq model ${model} failed or timed out:`, groqError.message);
+        }
+    }
+
+    // Tertiary: Try OpenRouter models with 3s timeout per model
     for (const model of openrouterModels) {
         try {
             const openrouterPromise = openrouter.chat.completions.create({

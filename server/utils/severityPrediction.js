@@ -27,19 +27,17 @@ Rules:
 Reply with ONLY a single digit between 1 and 5. No explanation. No punctuation.`;
 
 const groqModels = [
-    "llama-3.1-8b-instant",
-    "llama-3.3-70b-versatile",
-    "llama3-70b-8192",
-    "mixtral-8x7b-32768",
-    "gemma2-9b-it"
+  'groq/compound-mini',
+  'groq/compound'
 ];
 
 const openrouterModels = [
-    "google/gemini-2.0-flash-exp:free",
-    "meta-llama/llama-3.1-8b-instruct:free",
-    "mistralai/mistral-7b-instruct:free",
-    "qwen/qwen-2.5-7b-instruct:free",
-    "google/gemma-3-12b-it:free"
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'nvidia/nemotron-3.5-lightning:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'google/gemma-4-31b-it:free',
+  'minimax/minimax-m3:free',
+  'poolside/laguna-s-2.1:free'
 ];
 
 const parseSeverity = (text) => {

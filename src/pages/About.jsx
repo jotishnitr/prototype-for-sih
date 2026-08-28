@@ -408,4 +408,3 @@ function TeamMember({ name, role }) {
 
 
 export default About;
-```

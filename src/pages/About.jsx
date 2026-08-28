@@ -1,182 +1,411 @@
 function About() {
   return (
-    <main className="container" style={{ maxWidth: 960, padding: '48px 24px 64px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <span className="chip chip-info" style={{ marginBottom: 12 }}>
-          PS-05 DISASTER MANAGEMENT PLATFORM
-        </span>
-        <h1 style={{ fontSize: 34, color: 'var(--navy)', marginBottom: 12, fontWeight: 800 }}>
+    <main
+      className="container"
+      style={{
+        maxWidth: 900,
+        margin: "0 auto",
+        padding: "50px 24px",
+      }}
+    >
+      {/* Header */}
+      <div style={{ marginBottom: 45 }}>
+        <p
+          style={{
+            color: "#2563eb",
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: 1,
+            marginBottom: 10,
+          }}
+        >
+          PS-05 · DISASTER MANAGEMENT
+        </p>
+
+        <h1
+          style={{
+            color: "#172033",
+            fontSize: 36,
+            marginBottom: 14,
+          }}
+        >
           About ResQNet
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: 16, maxWidth: 720, margin: '0 auto', lineHeight: 1.6 }}>
-          ResQNet is an end-to-end, real-time disaster early-warning and autonomous resource coordination system. 
-          It bridges citizen emergency reports with disaster response authorities via live geospatial mapping, 
-          AI-driven severity prediction, automated resource dispatch, and instant SMS alerts.
+
+        <p
+          style={{
+            color: "#667085",
+            fontSize: 16,
+            lineHeight: 1.7,
+            maxWidth: 700,
+          }}
+        >
+          ResQNet is a disaster response platform that helps citizens
+          report emergencies and allows response teams to monitor
+          incidents and coordinate resources from one place.
         </p>
       </div>
 
-      {/* Grid of Key System Pillars */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 28 }}>
-        <div className="card" style={{ padding: 24, borderTop: '4px solid var(--red)' }}>
-          <div style={{ fontSize: 24, marginBottom: 10 }}>🚨</div>
-          <h3 style={{ fontSize: 17, marginBottom: 8, color: 'var(--navy)' }}>Citizen Incident Reporting</h3>
-          <p style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            Enables instant reporting with exact GPS coordinates, photos, incident type (Flood, Fire, Building Collapse, Medical), and descriptions. Automatically assigned to local jurisdictions.
-          </p>
-        </div>
-
-        <div className="card" style={{ padding: 24, borderTop: '4px solid var(--blue)' }}>
-          <div style={{ fontSize: 24, marginBottom: 10 }}>🤖</div>
-          <h3 style={{ fontSize: 17, marginBottom: 8, color: 'var(--navy)' }}>AI Demand &amp; Severity Model</h3>
-          <p style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            Utilizes built-in predictive algorithms (<code style={{ background: '#edf2f7', padding: '2px 5px', borderRadius: 4, fontSize: 12 }}>severityPrediction</code> &amp; <code style={{ background: '#edf2f7', padding: '2px 5px', borderRadius: 4, fontSize: 12 }}>resourcePrediction</code>) to forecast required personnel, food packets, water, and medical kits based on disaster intensity.
-          </p>
-        </div>
-
-        <div className="card" style={{ padding: 24, borderTop: '4px solid var(--green)' }}>
-          <div style={{ fontSize: 24, marginBottom: 10 }}>⚡</div>
-          <h3 style={{ fontSize: 17, marginBottom: 8, color: 'var(--navy)' }}>Spatial Auto-Allocation</h3>
-          <p style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            Calculates geospatial distances using MongoDB 2DSphere indexes &amp; Haversine logic to match and auto-dispatch the closest eligible rescue team, medical unit, or shelter in 1 click.
-          </p>
-        </div>
-      </div>
-
-      {/* Backend & Infrastructure Deep Dive */}
-      <div className="card" style={{ padding: 28, marginBottom: 28 }}>
-        <h2 style={{ fontSize: 20, marginBottom: 16, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span>⚙️</span> Backend Architecture &amp; Live Systems
+      {/* Why ResQNet */}
+      <section
+        style={{
+          borderTop: "3px solid #2563eb",
+          paddingTop: 25,
+          marginBottom: 45,
+        }}
+      >
+        <h2
+          style={{
+            color: "#172033",
+            marginBottom: 12,
+          }}
+        >
+          Why ResQNet?
         </h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 20 }}>
-          <div style={{ background: 'var(--bg)', padding: 18, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-            <h4 style={{ fontSize: 15, marginBottom: 8, color: 'var(--navy)' }}>🗄️ MongoDB Geospatial Database</h4>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              Production MongoDB Atlas cluster using custom schemas for <strong>Incidents</strong>, <strong>Resources</strong>, <strong>Allocations</strong>, <strong>Jurisdictions</strong>, <strong>Alerts</strong>, and <strong>Users</strong>. Employs <code>2dsphere</code> spatial indexes for instant location lookups.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--bg)', padding: 18, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-            <h4 style={{ fontSize: 15, marginBottom: 8, color: 'var(--navy)' }}>📡 Real-Time WebSockets (Socket.io)</h4>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              Bidirectional WebSocket connection pushes live incident creations, status modifications, auto-allocations, and emergency broadcast alerts instantly across all active commander dashboards without page reloads.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--bg)', padding: 18, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-            <h4 style={{ fontSize: 15, marginBottom: 8, color: 'var(--navy)' }}>📲 SMS Dispatch &amp; Emergency Alerting</h4>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              Integrated SMS broadcast service (<code>sendSms.js</code>) sends immediate text alerts to field team leads and emergency contacts when high-severity incidents occur or new units are deployed.
-            </p>
-          </div>
-
-          <div style={{ background: 'var(--bg)', padding: 18, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-            <h4 style={{ fontSize: 15, marginBottom: 8, color: 'var(--navy)' }}>🌩️ Weather Early Warning Engine</h4>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              Automated weather monitoring module (<code>getWeather.js</code>) fetches live meteorological conditions and disaster alerts to notify authorities of incoming severe weather events.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* How Workflow Operates */}
-      <div className="card" style={{ padding: 28, marginBottom: 28 }}>
-        <h2 style={{ fontSize: 20, marginBottom: 18, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span>🔄</span> End-to-End Incident Response Workflow
-        </h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Step number="1" title="Citizen Report Submission" text="Citizens log emergency incidents with GPS location, photo attachment, and category details via the public reporting portal." />
-          <Step number="2" title="AI Severity & Resource Demand Assessment" text="The backend runs predictive analysis to grade severity (Critical, High, Medium, Low) and calculate required rescue personnel, medical beds, or food/water supplies." />
-          <Step number="3" title="Live Geospatial Map & Heatmap Sync" text="The report streams via WebSockets to the jurisdiction dashboard, displaying interactive Leaflet markers and continuous density heatmaps." />
-          <Step number="4" title="Automated Nearest-Resource Match" text="Authorities initiate 1-click auto-allocation. The algorithm queries 2DSphere spatial coordinates, identifies the closest available resource, assigns it, and updates shelter/team readiness." />
-          <Step number="5" title="SMS Alert & Field Notification" text="Automated SMS notifications are dispatched to field commanders with incident directions and victim details." />
-        </div>
-      </div>
-
-      {/* Technology Stack Grid */}
-      <div className="card" style={{ padding: 28, marginBottom: 28 }}>
-        <h2 style={{ fontSize: 20, marginBottom: 16, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span>💻</span> Technology Stack
-        </h2>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-          <div>
-            <h4 style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, fontWeight: 700 }}>Frontend</h4>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {['React 19', 'Vite', 'React Router v7', 'Leaflet', 'React-Leaflet', 'Leaflet.heat', 'Socket.io Client'].map(t => (
-                <span key={t} className="chip chip-info" style={{ fontSize: 11 }}>{t}</span>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, fontWeight: 700 }}>Backend &amp; APIs</h4>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {['Node.js', 'Express.js', 'Socket.io Server', 'JWT Auth', 'SMS API', 'Fetch API'].map(t => (
-                <span key={t} className="chip chip-low" style={{ fontSize: 11 }}>{t}</span>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, fontWeight: 700 }}>Database &amp; AI</h4>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {['MongoDB Atlas', 'Mongoose ODM', '2DSphere Indexing', 'Gemini AI API', 'Severity Model'].map(t => (
-                <span key={t} className="chip chip-high" style={{ fontSize: 11 }}>{t}</span>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8, fontWeight: 700 }}>Deployment</h4>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {['Vercel (Frontend)', 'Render (Backend API)', 'Git Version Control'].map(t => (
-                <span key={t} className="chip chip-neutral" style={{ fontSize: 11 }}>{t}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Production System Note */}
-      <div className="card" style={{ padding: 22, borderLeft: '4px solid var(--green)', background: 'var(--green-bg)' }}>
-        <h2 style={{ fontSize: 15, marginBottom: 8, color: 'var(--green)' }}>Live Production System</h2>
-        <p style={{ fontSize: 13.5, color: 'var(--text-main)', lineHeight: 1.6 }}>
-          ResQNet operates with a live Node.js REST API and WebSocket gateway hosted on Render, connected to a production MongoDB database. 
-          All auto-allocation calculations, shelter occupancy percentages, emergency alerts, and live map markers reflect live database state and real-time backend updates.
+        <p
+          style={{
+            color: "#667085",
+            lineHeight: 1.7,
+            fontSize: 14.5,
+          }}
+        >
+          During a disaster, information needs to reach the right people
+          quickly. ResQNet brings incident reports, location information
+          and available resources together so that response teams can make
+          faster decisions.
         </p>
-      </div>
+      </section>
+
+      {/* Key Features */}
+      <section style={{ marginBottom: 45 }}>
+        <h2
+          style={{
+            color: "#172033",
+            marginBottom: 20,
+          }}
+        >
+          Key Features
+        </h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: 18,
+          }}
+        >
+          <Feature
+            title="Report Incidents"
+            text="Citizens can report floods, fires, medical emergencies and other incidents with their location."
+          />
+
+          <Feature
+            title="Live Map"
+            text="Response teams can see reported incidents and available resources on a live map."
+          />
+
+          <Feature
+            title="Resource Coordination"
+            text="Nearby teams and resources can be identified and assigned to incidents."
+          />
+
+          <Feature
+            title="Emergency Alerts"
+            text="Important incident updates can be sent to the concerned response teams."
+          />
+        </div>
+      </section>
+
+      {/* How ResQNet Works */}
+      <section style={{ marginBottom: 45 }}>
+        <h2
+          style={{
+            color: "#172033",
+            marginBottom: 20,
+          }}
+        >
+          How ResQNet Works
+        </h2>
+
+        <Step
+          number="01"
+          title="Report"
+          text="A citizen reports an emergency through the platform."
+        />
+
+        <Step
+          number="02"
+          title="Review"
+          text="The incident is received and its priority is determined."
+        />
+
+        <Step
+          number="03"
+          title="Assign"
+          text="Suitable nearby resources are identified for the incident."
+        />
+
+        <Step
+          number="04"
+          title="Respond"
+          text="The response team receives the information and takes action."
+        />
+      </section>
+
+      {/* Team */}
+      <section style={{ marginBottom: 45 }}>
+        <h2
+          style={{
+            color: "#172033",
+            marginBottom: 10,
+          }}
+        >
+          The Team
+        </h2>
+
+        <p
+          style={{
+            color: "#667085",
+            fontSize: 14,
+            lineHeight: 1.6,
+            marginBottom: 22,
+          }}
+        >
+          ResQNet was designed and developed as a team project with a
+          focus on making disaster response faster and more organised.
+        </p>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 16,
+          }}
+        >
+          <TeamMember
+            name="D. Jotish Kumar"
+            role="Backend & Database"
+          />
+          
+          <TeamMember
+            name="Aryan Biswal"
+            role="Frontend Development"
+          />
+
+          <TeamMember
+            name="Nihal Kumar"
+            role="Frontend Development"
+          />
+
+          <TeamMember
+            name="Parjanya Soni"
+            role="Research & Testing"
+          />
+
+          <TeamMember
+            name="Charan Hadaginal"
+            role="Research & Testing"
+          />
+
+          <TeamMember
+            name="Nikita Kumari"
+            role="Designer"
+          />
+        </div>
+      </section>
+
+      {/* Built With */}
+      <section
+        style={{
+          borderTop: "1px solid #e4e7ec",
+          paddingTop: 28,
+        }}
+      >
+        <h2
+          style={{
+            color: "#172033",
+            marginBottom: 15,
+          }}
+        >
+          Built With
+        </h2>
+
+        <p
+          style={{
+            color: "#667085",
+            fontSize: 14,
+            lineHeight: 1.7,
+          }}
+        >
+          React, Node.js, Express, MongoDB, Leaflet and Socket.io are
+          used to build the platform and provide real-time incident
+          monitoring and location-based resource coordination.
+        </p>
+
+        <p
+          style={{
+            color: "#2563eb",
+            fontSize: 13,
+            fontWeight: 600,
+            marginTop: 18,
+          }}
+        >
+          PS-05 · Disaster Management Platform
+        </p>
+      </section>
     </main>
-  )
+  );
 }
 
+
+/* Feature Card */
+function Feature({ title, text }) {
+  return (
+    <div
+      style={{
+        padding: 22,
+        border: "1px solid #dbe3f0",
+        borderRadius: 8,
+        background: "#fff",
+      }}
+    >
+      <div
+        style={{
+          width: 32,
+          height: 3,
+          background: "#2563eb",
+          marginBottom: 15,
+        }}
+      />
+
+      <h3
+        style={{
+          fontSize: 16,
+          color: "#172033",
+          marginBottom: 8,
+        }}
+      >
+        {title}
+      </h3>
+
+      <p
+        style={{
+          fontSize: 13.5,
+          color: "#667085",
+          lineHeight: 1.6,
+        }}
+      >
+        {text}
+      </p>
+    </div>
+  );
+}
+
+
+/* Workflow Step */
 function Step({ number, title, text }) {
   return (
-    <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 18,
+        padding: "16px 0",
+        borderBottom: "1px solid #e4e7ec",
+      }}
+    >
       <span
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: '50%',
-          background: 'var(--navy)',
-          color: '#fff',
+          color: "#2563eb",
           fontSize: 13,
           fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          marginTop: 2
+          minWidth: 30,
         }}
       >
         {number}
       </span>
+
       <div>
-        <h4 style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--navy)', marginBottom: 2 }}>{title}</h4>
-        <p style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>{text}</p>
+        <h3
+          style={{
+            fontSize: 15,
+            color: "#172033",
+            marginBottom: 5,
+          }}
+        >
+          {title}
+        </h3>
+
+        <p
+          style={{
+            fontSize: 13.5,
+            color: "#667085",
+            lineHeight: 1.5,
+            margin: 0,
+          }}
+        >
+          {text}
+        </p>
       </div>
     </div>
-  )
+  );
 }
 
-export default About
+
+/* Team Member Card */
+function TeamMember({ name, role }) {
+  return (
+    <div
+      style={{
+        padding: "18px 20px",
+        border: "1px solid #dbe3f0",
+        borderRadius: 8,
+        background: "#fff",
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: "50%",
+          background: "#eff6ff",
+          color: "#2563eb",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 15,
+          fontWeight: 700,
+          marginBottom: 12,
+        }}
+      >
+        {name.charAt(0)}
+      </div>
+
+      <h3
+        style={{
+          fontSize: 15,
+          color: "#172033",
+          marginBottom: 5,
+        }}
+      >
+        {name}
+      </h3>
+
+      <p
+        style={{
+          fontSize: 13,
+          color: "#667085",
+          margin: 0,
+        }}
+      >
+        {role}
+      </p>
+    </div>
+  );
+}
+
+
+export default About;
+```

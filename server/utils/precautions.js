@@ -295,7 +295,7 @@ const precautions = async (reqOrParams, res) => {
         if (parsed && (parsed.precautions.length > 0 || parsed.suggestions.length > 0)) {
             precautionsList = parsed.precautions;
             suggestionsList = parsed.suggestions;
-            aiProviderUsed = 'gemini';
+            aiProviderUsed = 'ResQNet Intelligence Engine';
         }
     } catch (geminiError) {
         console.warn("Gemini precautions generation failed or timed out, trying Groq:", geminiError.message);
@@ -319,7 +319,7 @@ const precautions = async (reqOrParams, res) => {
                 if (parsed && (parsed.precautions.length > 0 || parsed.suggestions.length > 0)) {
                     precautionsList = parsed.precautions;
                     suggestionsList = parsed.suggestions;
-                    aiProviderUsed = `groq (${model})`;
+                    aiProviderUsed = 'ResQNet Intelligence Engine';
                     break;
                 }
             } catch (groqError) {
@@ -350,7 +350,7 @@ const precautions = async (reqOrParams, res) => {
                 if (parsed && (parsed.precautions.length > 0 || parsed.suggestions.length > 0)) {
                     precautionsList = parsed.precautions;
                     suggestionsList = parsed.suggestions;
-                    aiProviderUsed = `openrouter (${model})`;
+                    aiProviderUsed = 'ResQNet Intelligence Engine';
                     break;
                 }
             } catch (openrouterError) {
@@ -364,7 +364,7 @@ const precautions = async (reqOrParams, res) => {
         const fallback = getHeuristicPrecautions(incidentType, estResponseTime);
         precautionsList = fallback.precautions;
         suggestionsList = fallback.suggestions;
-        aiProviderUsed = 'heuristic_rules';
+        aiProviderUsed = 'ResQNet Intelligence Engine';
     }
 
     const responseData = {

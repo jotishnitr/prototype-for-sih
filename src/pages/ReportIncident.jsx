@@ -157,7 +157,7 @@ function ReportIncident() {
         setPrecautionsList(data.precautions || [])
         setSuggestionsList(data.suggestions || [])
         setEstResponseTime(data.estResponseTime || 12.5)
-        setAiProvider(data.aiProvider || 'Gemini AI')
+        setAiProvider(data.aiProvider || 'ResQNet Intelligence Engine')
         setSubmitted(true)
       } else {
         setErrorMsg(data.message || 'Failed to submit report. Please try again.')

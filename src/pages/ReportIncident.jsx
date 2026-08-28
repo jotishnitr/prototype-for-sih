@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 const incidentTypes = [
   { label: 'Flood', value: 'flood' },
@@ -175,6 +175,8 @@ function ReportIncident() {
     }
   }
 
+  const reportCardRef = useRef(null)
+
   function resetForm() {
     setSubmitted(false)
     setLocation(null)
@@ -191,10 +193,106 @@ function ReportIncident() {
     setAiProvider('')
   }
 
+  function handleDownloadReport() {
+    const reportId = createdIncidentId || 'INC-EMERGENCY';
+    const content = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ResQNet Emergency Incident Report - ${reportId}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 32px; color: #0f172a; max-width: 720px; margin: 0 auto; line-height: 1.6; }
+    .header { border-bottom: 3px solid #2fa860; padding-bottom: 16px; margin-bottom: 24px; text-align: center; }
+    .title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; }
+    .code { background: #e2e8f0; color: #1e293b; padding: 4px 10px; borderRadius: 6px; font-weight: bold; font-family: monospace; font-size: 15px; }
+    .badge { background: #0f172a; color: #38bdf8; padding: 12px 18px; border-radius: 8px; margin: 20px 0; font-size: 14px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .section { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+    .section h3 { margin: 0 0 12px 0; color: #b91c1c; font-size: 15px; font-weight: 700; }
+    .suggestions { background: #f0f9ff; border-color: #bae6fd; }
+    .suggestions h3 { color: #0369a1; }
+    ul { margin: 0; padding-left: 20px; font-size: 13.5px; color: #334155; }
+    li { margin-bottom: 8px; }
+    .footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 class="title">🚨 ResQNet Emergency Incident Report</h1>
+    <p style="margin: 6px 0 0 0; color: #64748b; font-size: 14px;">
+      Incident Reference Code: <span class="code">${reportId}</span>
+    </p>
+    <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 12px;">Generated: ${new Date().toLocaleString()}</p>
+  </div>
+
+  ${estResponseTime != null ? `
+  <div class="badge">
+    <span>⏱️ Estimated Response Time: <strong style="color: #4ade80;">~${estResponseTime} Minutes</strong></span>
+    <span>⚡ ${aiProvider || 'ResQNet Intelligence Engine'}</span>
+  </div>
+  ` : ''}
+
+  ${precautionsList.length > 0 ? `
+  <div class="section">
+    <h3>🛡️ Immediate Citizen Safety Precautions</h3>
+    <ul>
+      ${precautionsList.map(p => `<li>${p}</li>`).join('')}
+    </ul>
+  </div>
+  ` : ''}
+
+  ${suggestionsList.length > 0 ? `
+  <div class="section suggestions">
+    <h3>⚡ Operational Dispatch Action Steps</h3>
+    <ul>
+      ${suggestionsList.map(s => `<li>${s}</li>`).join('')}
+    </ul>
+  </div>
+  ` : ''}
+
+  <div class="footer">
+    Transmitted to ResQNet Emergency Control Room & Live Spatial Dispatch Radar.<br>
+    Keep this report for your offline emergency records.
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([content], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ResQNet-Emergency-Report-${reportId}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   if (submitted) {
     return (
       <main className="container" style={{ maxWidth: 740, padding: '48px 24px', textAlign: 'center' }}>
-        <div className="card" style={{ padding: '36px 28px', borderTop: '5px solid #2fa860' }}>
+        
+        {/* Screenshot & Download Reminder Banner */}
+        <div style={{
+          background: '#fffbebf0',
+          border: '1px solid #fef08a',
+          color: '#713f12',
+          padding: '14px 18px',
+          borderRadius: 10,
+          fontSize: 14,
+          marginBottom: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          textAlign: 'left',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+        }}>
+          <span style={{ fontSize: 24, flexShrink: 0 }}>📸</span>
+          <div>
+            <strong>Important Tip for Citizens:</strong> Please <strong>download your report</strong> or <strong>take a screenshot</strong> of this page now for your offline reference.
+          </div>
+        </div>
+
+        <div ref={reportCardRef} className="card" style={{ padding: '36px 28px', borderTop: '5px solid #2fa860' }}>
           <div style={{ fontSize: 44, marginBottom: 8 }}>✅</div>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-dark, #0f172a)', marginBottom: 6 }}>
             Emergency Report Received
@@ -231,7 +329,7 @@ function ReportIncident() {
           {/* AI Precautions & Suggestions Section */}
           {(precautionsList.length > 0 || suggestionsList.length > 0) && (
             <div style={{ textAlign: 'left', marginTop: 12, marginBottom: 28, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-              
+
               {/* Precautions Card */}
               {precautionsList.length > 0 && (
                 <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 10, padding: 18 }}>
@@ -263,9 +361,29 @@ function ReportIncident() {
             </div>
           )}
 
-          <p style={{ color: 'var(--text-muted, #64748b)', fontSize: 13, marginBottom: 24 }}>
+          <p style={{ color: 'var(--text-muted, #64748b)', fontSize: 13, marginBottom: 20 }}>
             Your report has been transmitted to the ResQNet Emergency Control Room & live spatial map.
           </p>
+
+          {/* Download & Print Action Buttons */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={handleDownloadReport}
+              style={{ padding: '10px 18px', fontSize: 14, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8 }}
+            >
+              📥 Download Emergency Report
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => window.print()}
+              style={{ padding: '10px 18px', fontSize: 14, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8 }}
+            >
+              📸 Print / Save PDF
+            </button>
+          </div>
 
           <button className="btn btn-primary" onClick={resetForm} style={{ padding: '12px 24px', fontSize: 15, fontWeight: 700 }}>
             Submit Another Emergency Report

@@ -3,8 +3,7 @@ const groq = require('./groq');
 const openrouter = require('./openrouter');
 
 const geminiModels = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash'
+    'gemini-flash-latest'
 ];
 
 const groqModels = [

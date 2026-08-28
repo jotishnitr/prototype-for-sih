@@ -65,7 +65,7 @@ const severityPrediction = async (req) => {
     // Primary: Try Gemini AI with 3s timeout
     try {
         const geminiPromise = gemini.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-flash-latest',
             contents: severityPrompt(description, incidentType),
         });
         const response = await withTimeout(geminiPromise, 3000, "Gemini AI");

@@ -495,7 +495,7 @@ function ReportIncident() {
 
         {/* Reporter Phone */}
         <div>
-          <label style={labelStyle}>Contact Phone Number (Optional)</label>
+          <label style={labelStyle}>Contact Phone Number (Optional - for SMS Alerts)</label>
           <input
             type="tel"
             placeholder="e.g. +91 9876543210"
@@ -503,6 +503,9 @@ function ReportIncident() {
             onChange={(e) => setReporterPhone(e.target.value)}
             style={selectStyle}
           />
+          <p style={{ fontSize: 12, marginTop: 6, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>📲</span> Provide your mobile number to receive instant automated SMS updates & rescue dispatch alerts.
+          </p>
         </div>
 
         {/* Incident type */}

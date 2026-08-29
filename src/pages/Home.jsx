@@ -1,50 +1,8 @@
-import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 function Home() {
-  const [weatherAlert, setWeatherAlert] = useState(null)
-
-  useEffect(() => {
-    async function fetchWeather() {
-      try {
-        const response = await fetch("https://resqnet-fmhd.onrender.com/api/getWeather", {
-          method: "GET",
-          credentials: "include"
-        })
-        if (response.ok) {
-          const data = await response.json()
-          if (data.weatherAlert) {
-            setWeatherAlert(data.weatherAlert)
-          }
-        }
-      } catch (err) {
-        console.warn("Could not load live weather:", err)
-      }
-    }
-    fetchWeather()
-  }, [])
-
   return (
     <main>
-      {/* Weather Early Warning Ticker */}
-      <div style={{ background: 'var(--navy-dark)', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '10px 0', color: '#fff', fontSize: '13px' }}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="chip chip-critical" style={{ fontSize: '10px', padding: '2px 8px' }}>⚡ EARLY WARNING BANNER</span>
-            <span style={{ fontWeight: 600, color: '#fef1e6' }}>
-              {typeof weatherAlert === 'string'
-                ? weatherAlert
-                : (weatherAlert?.title
-                    ? `${weatherAlert.title}${weatherAlert.area ? ` (${weatherAlert.area})` : ''}${weatherAlert.severity ? ` - ${weatherAlert.severity}` : ''}`
-                    : 'IMD Weather Warning: Active Monitoring Enabled for Coastal & Flood-prone Districts')}
-            </span>
-          </div>
-          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#2fa860', display: 'inline-block' }}></span>
-            Render Backend Live &amp; WebSocket Connected
-          </span>
-        </div>
-      </div>
 
       {/* Hero Section */}
       <section style={{ background: 'var(--navy)', color: '#fff', padding: '64px 0 72px' }}>

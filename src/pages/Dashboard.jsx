@@ -363,6 +363,16 @@ function Dashboard({ onUnauthorized }) {
       }
     })
 
+    socket.on('resource:updated', (updatedResource) => {
+      console.log('Resource updated via socket:', updatedResource)
+      if (updatedResource) {
+        const targetId = updatedResource._id || updatedResource.id
+        setResources((prev) => prev.map(r => ((r._id || r.id) === targetId ? updatedResource : r)))
+        getStats()
+        getReadiness()
+      }
+    })
+
     socket.on('resource:deleted', (data) => {
       console.log('Resource deleted via socket:', data)
       if (data?.resource_id) {

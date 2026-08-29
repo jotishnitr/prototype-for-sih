@@ -39,6 +39,11 @@ const updateIncidentStatus = async (req, res) => {
         }
         await incident.save();
 
+        if (resource) {
+            broadcastToJurisdiction(io, incident.jurisdiction_id.toString(), 'resource:updated', resource);
+            io.emit('resource:updated', resource);
+        }
+
         const updatedAlert = await AlertLog.findOneAndUpdate(
             { incident_id: incident._id },
             { $set: { status: status, title: `Incident ${status}` } },

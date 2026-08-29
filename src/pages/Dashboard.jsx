@@ -765,17 +765,14 @@ function Dashboard({ onUnauthorized }) {
             <button 
               className="btn btn-small btn-signout"
               onClick={handleSignOut}
-              style={{ 
-                padding: '7px 14px', 
-                fontSize: '12px', 
-                fontWeight: 600, 
-                borderRadius: '6px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}
+              title="Sign Out of Control Center"
             >
-              🚪 Sign Out
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="signout-icon">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span>Sign Out</span>
             </button>
           </div>
         </div>

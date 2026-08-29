@@ -11,7 +11,8 @@ const sendAcessToken = (req, res, accesstoken) => {
     res.cookie('accesstoken', accesstoken, {
         httpOnly: true,
         sameSite: 'none',
-        secure: true
+        secure: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000
     });
     res.json({
         accesstoken,

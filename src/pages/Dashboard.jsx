@@ -28,6 +28,7 @@ function Dashboard({ onUnauthorized }) {
   const navigate = useNavigate()
 
   const [incidents, setIncidents] = useState(null)
+  const [filterType, setFilterType] = useState('all')
   const [resources, setResources] = useState([])
   const [alerts, setAlerts] = useState([])
   const [readinessData, setReadinessData] = useState(null)
@@ -77,6 +78,14 @@ function Dashboard({ onUnauthorized }) {
       return idStr === targetIdStr || formattedIncId === targetIdStr
     }) || (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
     : (typeof selectedId === 'object' && selectedId !== null ? selectedId : null)
+
+  const filteredIncidents = incidents
+    ? incidents.filter((inc) => {
+        if (!inc) return false
+        if (filterType === 'all') return true
+        return inc.type?.toLowerCase() === filterType.toLowerCase()
+      })
+    : null
 
   const [activeCount, setActiveCount] = useState(0)
   const [weather, setWeather] = useState(null)
@@ -806,26 +815,63 @@ function Dashboard({ onUnauthorized }) {
       <div className="container dash-grid" style={{ padding: '20px 24px 40px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
         {/* Map column */}
         <div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            {['reports', 'resources', 'heatmap'].map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className="btn btn-small"
-                style={{
-                  background: viewMode === mode ? 'var(--navy)' : '#fff',
-                  color: viewMode === mode ? '#fff' : 'var(--text-main)',
-                  border: '1px solid var(--border)'
-                }}
-              >
-                {mode === 'reports' ? 'Reports' : mode === 'resources' ? 'Resources' : 'Heatmap'}
-              </button>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {['reports', 'resources', 'heatmap'].map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className="btn btn-small"
+                  style={{
+                    background: viewMode === mode ? 'var(--navy)' : '#fff',
+                    color: viewMode === mode ? '#fff' : 'var(--text-main)',
+                    border: '1px solid var(--border)'
+                  }}
+                >
+                  {mode === 'reports' ? 'Reports' : mode === 'resources' ? 'Resources' : 'Heatmap'}
+                </button>
+              ))}
+            </div>
+
+            {(viewMode === 'reports' || viewMode === 'heatmap') && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>
+                  Filter Type:
+                </span>
+                <select
+                  value={filterType}
+                  onChange={(e) => {
+                    setFilterType(e.target.value)
+                    setSelectedId(null)
+                    setSelectedResource(null)
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    color: 'var(--text-main)',
+                    background: '#ffffff',
+                    border: '1px solid var(--border)',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    fontFamily: 'inherit'
+                  }}
+                >
+                  <option value="all">All Incidents</option>
+                  <option value="flood">🌊 Flood</option>
+                  <option value="fire">🔥 Fire</option>
+                  <option value="cyclone">🌀 Cyclone</option>
+                  <option value="landslide">⛰️ Landslide</option>
+                  <option value="medical">🚑 Medical</option>
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="card" style={{ height: 520, overflow: 'hidden' }}>
             <MapView
-              incidents={incidents}
+              incidents={filteredIncidents}
               resources={resources}
               selectedIncident={selectedIncident}
               selectedResource={selectedResource}
@@ -838,8 +884,8 @@ function Dashboard({ onUnauthorized }) {
               allocationType={allocationType}
               predictedResource={predictedResource}
               center={
-                incidents && incidents.length > 0 && incidents[0].location?.coordinates
-                  ? [incidents[0].location.coordinates[1], incidents[0].location.coordinates[0]]
+                filteredIncidents && filteredIncidents.length > 0 && filteredIncidents[0].location?.coordinates
+                  ? [filteredIncidents[0].location.coordinates[1], filteredIncidents[0].location.coordinates[0]]
                   : [22.2528, 84.9119]}
             />
           </div>

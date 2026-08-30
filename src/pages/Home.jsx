@@ -4,285 +4,1055 @@ function Home() {
   return (
     <main>
 
-      {/* Hero Section */}
-      <section style={{ background: 'var(--navy)', color: '#fff', padding: '64px 0 72px' }}>
-        <div className="container hero-grid" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 48, alignItems: 'center' }}>
+      {/* HERO SECTION */}
+      <section className="home-hero">
+        <div className="container hero-grid">
+
           <div>
-            <span className="chip chip-info" style={{ marginBottom: 18, display: 'inline-flex' }}>
-              PS-05 DISASTER EARLY-WARNING &amp; RESOURCE PLATFORM
-            </span>
-            <h1 style={{ fontSize: 42, lineHeight: 1.15, marginBottom: 18, fontWeight: 800 }}>
-              Real-Time Disaster Response, Connected.
-            </h1>
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, marginBottom: 30, maxWidth: 500 }}>
-              ResQNet unifies citizen emergency reporting, AI severity prediction, 2DSphere spatial auto-allocation, and SMS dispatch on a live interactive command dashboard.
+            <p className="hero-label">
+              PS-05 • DISASTER MANAGEMENT
             </p>
-            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              <Link to="/report" className="btn btn-primary" style={{ padding: '12px 24px', fontSize: 15 }}>
-                🚨 Report an Incident
+
+            <h1 className="hero-title">
+              Faster Response.
+              <br />
+              Better Coordination.
+            </h1>
+
+            <p className="hero-description">
+              ResQNet connects citizens, response teams and available
+              resources to make disaster response faster and more organised.
+            </p>
+
+            <div className="hero-buttons">
+
+              <Link to="/report" className="report-btn">
+                Report an Incident
               </Link>
-              <Link to="/dashboard" className="btn btn-outline" style={{ borderColor: '#fff', color: '#fff', padding: '12px 24px', fontSize: 15 }}>
-                📊 Open Authority Dashboard
+
+              <Link to="/dashboard" className="dashboard-btn">
+                Open Dashboard
               </Link>
+
             </div>
           </div>
 
           <MiniMapGraphic />
+
         </div>
       </section>
 
-      {/* System Features Grid */}
-      <section style={{ padding: '56px 0 32px' }}>
+
+      {/* FEATURES SECTION */}
+      <section className="features-section">
         <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: 36 }}>
-            <h2 style={{ fontSize: 26, color: 'var(--navy)', marginBottom: 8, fontWeight: 800 }}>
-              End-to-End Emergency Coordination Features
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: 15, maxWidth: 640, margin: '0 auto' }}>
-              Engineered with full-stack MongoDB geospatial indexing, Socket.io WebSockets, AI prediction models, and SMS alert dispatch.
+
+          <div className="section-heading">
+
+            <p className="section-label">
+              WHAT RESQNET PROVIDES
             </p>
+
+            <h2 className="section-title">
+              Simple tools for faster response
+            </h2>
+
+            <p className="section-description">
+              Everything response teams need to receive information,
+              understand incidents and coordinate available resources.
+            </p>
+
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }} id="feature-grid">
+
+          <div className="feature-grid">
+
             <FeatureCard
-              icon="📍"
-              title="Live Geospatial & Heatmap Tracking"
-              desc="Interactive Leaflet mapping with severity-coded pins and continuous kernel density heatmaps for real-time situational awareness."
-              color="var(--red)"
+              icon="▤"
+              title="Incident Reporting"
+              desc="Citizens can quickly report emergencies with their location and important incident details."
             />
+
             <FeatureCard
-              icon="⚡"
-              title="2DSphere Spatial Auto-Allocation"
-              desc="Haversine distance algorithms automatically calculate spatial proximity to dispatch the nearest rescue team, ambulance, or shelter in 1 click."
-              color="var(--blue)"
+              icon="⌖"
+              title="Live Map"
+              desc="View reported incidents and available resources on a single interactive map."
             />
+
             <FeatureCard
-              icon="🤖"
-              title="AI Demand & Severity Prediction"
-              desc="Intelligent algorithms analyze report text to grade severity levels and forecast exact resource requirements (food, water, beds, medical kits)."
-              color="var(--orange)"
+              icon="●"
+              title="Resource Coordination"
+              desc="Identify nearby response teams and resources that can help with an incident."
             />
+
             <FeatureCard
-              icon="📲"
-              title="Emergency SMS & Alert Broadcast"
-              desc="Low-latency SMS emergency dispatch transmits urgent incident updates directly to field commander phones and citizen contact numbers."
-              color="var(--green)"
+              icon="♢"
+              title="Emergency Alerts"
+              desc="Important updates can be shared with the concerned response teams when needed."
             />
+
           </div>
+
         </div>
       </section>
 
-      {/* Architecture & Stats Overview */}
-      <section id="about" style={{ padding: '24px 0 64px' }}>
-        <div className="container card" style={{ padding: 32, background: '#ffffff', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 32, alignItems: 'center' }} className="overview-grid">
-            <div>
-              <span className="chip chip-info" style={{ marginBottom: 12 }}>SYSTEM OVERVIEW</span>
-              <h2 style={{ fontSize: 22, marginBottom: 10, color: 'var(--navy)', fontWeight: 700 }}>About ResQNet Platform</h2>
-              <p style={{ fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 16 }}>
-                Built for PS-05, ResQNet operates on a Node.js REST API with Socket.io WebSockets on Render, backed by a production MongoDB Atlas database with 2DSphere spatial indexing.
-              </p>
-              <Link to="/about" style={{ fontSize: 14, fontWeight: 700, color: 'var(--blue)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                View Full Technology Stack &amp; Features &rarr;
-              </Link>
-            </div>
 
-            <div style={{ display: 'flex', gap: 32, borderLeft: '1px solid var(--border)', paddingLeft: 32 }} className="stats-border">
-              <Stat label="Avg Response Time" value="< 5 min" color="var(--green)" />
-              <Stat label="Geospatial Indexing" value="2DSphere" color="var(--blue)" />
-              <Stat label="Live Dispatch" value="WebSockets" color="var(--orange)" />
-              <Stat label="Problem Statement" value="PS-05" color="var(--navy)" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer
-        style={{
-          background: "#0a1f3d",
-          color: "rgba(255,255,255,0.7)",
-          padding: "50px 0 25px",
-          fontSize: 14,
-          marginTop: 40,
-        }}
-      >
+      {/* RESPONSE PROCESS */}
+      <section className="process-section">
         <div className="container">
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "space-between",
-              gap: 40,
-              borderBottom: "1px solid rgba(255,255,255,0.1)",
-              paddingBottom: 40,
-              marginBottom: 25,
-            }}
-          >
-            {/* Brand Info */}
-            <div style={{ maxWidth: 320 }}>
-              <strong
-                style={{
-                  color: "#fff",
-                  fontSize: 20,
-                  display: "block",
-                  marginBottom: 15,
-                  letterSpacing: 0.5,
-                }}
-              >
+
+          <p className="section-label">
+            RESPONSE PROCESS
+          </p>
+
+          <h2 className="section-title">
+            How ResQNet Works
+          </h2>
+
+
+          <div className="process-grid">
+
+            <ProcessCard
+              number="01"
+              title="Report"
+              text="An incident is reported by a citizen."
+            />
+
+            <ProcessCard
+              number="02"
+              title="Review"
+              text="The incident is checked and prioritised."
+            />
+
+            <ProcessCard
+              number="03"
+              title="Assign"
+              text="Suitable nearby resources are identified."
+            />
+
+            <ProcessCard
+              number="04"
+              title="Respond"
+              text="The response team takes action."
+            />
+
+          </div>
+
+        </div>
+      </section>
+
+
+      {/* PLATFORM OVERVIEW */}
+      <section className="overview-section">
+
+        <div className="container overview-grid">
+
+          <div>
+
+            <p className="section-label">
+              THE PLATFORM
+            </p>
+
+            <h2 className="section-title">
+              One place for disaster coordination
+            </h2>
+
+            <p className="overview-text">
+              ResQNet brings incident reporting, live location information
+              and resource coordination together in one platform.
+            </p>
+
+            <Link to="/about" className="about-link">
+              Learn more about ResQNet →
+            </Link>
+
+          </div>
+
+
+          <div className="info-container">
+
+            <InfoRow
+              title="Real-time monitoring"
+              text="Track incidents and updates as they happen."
+            />
+
+            <InfoRow
+              title="Location-based coordination"
+              text="Use location information to find suitable nearby resources."
+            />
+
+            <InfoRow
+              title="Connected response"
+              text="Keep citizens and response teams connected through one system."
+            />
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* CALL TO ACTION */}
+      <section className="cta-section">
+
+        <h2 className="cta-title">
+          Help report. Help respond.
+        </h2>
+
+        <p className="cta-text">
+          Together, better information can lead to faster action.
+        </p>
+
+        <Link to="/report" className="cta-button">
+          Report an Incident
+        </Link>
+
+      </section>
+
+
+      {/* FOOTER */}
+      <footer className="home-footer">
+
+        <div className="container">
+
+          <div className="footer-top">
+
+            {/* BRAND */}
+            <div className="footer-brand">
+
+              <strong className="footer-brand-title">
                 ResQNet
               </strong>
-              <p style={{ margin: 0, lineHeight: 1.6 }}>
-                A centralized platform for disaster management, connecting citizens with emergency responders for rapid, organized action.
+
+              <p className="footer-brand-text">
+                A centralized platform for disaster management,
+                connecting citizens with emergency responders.
               </p>
+
             </div>
 
-            {/* Navigation Links */}
-            <div style={{ display: "flex", gap: 60, flexWrap: "wrap" }}>
+
+            {/* NAVIGATION */}
+            <div className="footer-navigation">
+
               <div>
-                <strong
-                  style={{
-                    color: "#fff",
-                    display: "block",
-                    marginBottom: 15,
-                    fontSize: 13,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                  }}
-                >
-                  Platform
+
+                <strong className="footer-heading">
+                  PLATFORM
                 </strong>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <Link to="/report" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+
+                <div className="footer-links">
+
+                  <Link to="/report" className="footer-link">
                     Report Incident
                   </Link>
-                  <Link to="/dashboard" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+
+                  <Link to="/dashboard" className="footer-link">
                     Live Dashboard
                   </Link>
-                  <Link to="/about" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
+
+                  <Link to="/about" className="footer-link">
                     About Us
                   </Link>
+
                 </div>
+
               </div>
+
 
               <div>
-                <strong
-                  style={{
-                    color: "#fff",
-                    display: "block",
-                    marginBottom: 15,
-                    fontSize: 13,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                  }}
-                >
-                  Legal
+
+                <strong className="footer-heading">
+                  TEAM
                 </strong>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <Link to="/about" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
-                    Privacy Policy
+
+                <div className="footer-links">
+
+                  <Link to="/about" className="footer-link">
+                    Team Altiora
                   </Link>
-                  <Link to="/about" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
-                    Terms of Service
+
+                  <Link to="/about" className="footer-link">
+                    About ResQNet
                   </Link>
-                  <a href="mailto:support@resqnet.example" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>
-                    Contact Support
-                  </a>
+
                 </div>
+
               </div>
+
             </div>
+
           </div>
 
-          {/* Copyright Area */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 15,
-              fontSize: 12.5,
-            }}
-          >
-            <span>&copy; {new Date().getFullYear()} ResQNet. All rights reserved. Made by Team Altiora</span>
-            <span>PS-05 · Disaster Management</span>
+
+          {/* FOOTER BOTTOM */}
+          <div className="footer-bottom">
+
+            <span>
+              © {new Date().getFullYear()} ResQNet · Made by Team Altiora
+            </span>
+
+            <span>
+              PS-05 · Disaster Management
+            </span>
+
           </div>
+
         </div>
+
       </footer>
 
+
+      {/* ALL CSS */}
       <style>{`
-        @media (max-width: 860px) {
+
+        * {
+          box-sizing: border-box;
+        }
+
+
+        /* HERO */
+
+        .home-hero {
+          background: #06295f;
+          color: #fff;
+          padding: 64px 0 72px;
+        }
+
+        .hero-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 50px;
+          align-items: center;
+        }
+
+        .hero-label {
+          color: #3b82f6;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 18px;
+          letter-spacing: 0.5px;
+        }
+
+        .hero-title {
+          font-size: 46px;
+          line-height: 1.1;
+          margin: 0 0 20px;
+          font-weight: 800;
+          color: #fff;
+        }
+
+        .hero-description {
+          font-size: 16px;
+          color: rgba(255,255,255,0.82);
+          line-height: 1.7;
+          margin-bottom: 30px;
+          max-width: 500px;
+        }
+
+        .hero-buttons {
+          display: flex;
+          gap: 14px;
+          flex-wrap: wrap;
+        }
+
+        .report-btn {
+          background: #1769e0;
+          color: #fff;
+          padding: 13px 28px;
+          font-size: 14px;
+          font-weight: 700;
+          border-radius: 6px;
+          text-decoration: none;
+        }
+
+        .report-btn:hover {
+          background: #0f5bc7;
+        }
+
+        .dashboard-btn {
+          border: 1px solid rgba(255,255,255,0.8);
+          color: #fff;
+          padding: 13px 28px;
+          font-size: 14px;
+          font-weight: 600;
+          border-radius: 6px;
+          text-decoration: none;
+        }
+
+        .dashboard-btn:hover {
+          background: rgba(255,255,255,0.1);
+        }
+
+
+        /* FEATURES */
+
+        .features-section {
+          padding: 58px 0 40px;
+          background: #fff;
+        }
+
+        .section-heading {
+          margin-bottom: 32px;
+        }
+
+        .section-label {
+          color: #1769e0;
+          font-size: 13px;
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+
+        .section-title {
+          font-size: 28px;
+          color: #071b41;
+          margin: 0 0 10px;
+          font-weight: 800;
+        }
+
+        .section-description {
+          color: #59677f;
+          font-size: 14.5px;
+          max-width: 600px;
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        .feature-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+        }
+
+        .feature-card {
+          border: 1px solid #dce6f5;
+          border-radius: 7px;
+          padding: 22px;
+          background: #fff;
+          transition: 0.2s;
+        }
+
+        .feature-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 25px rgba(7,27,65,0.08);
+        }
+
+        .feature-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background: #eaf2ff;
+          color: #1456c3;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 22px;
+          font-weight: 700;
+          margin-bottom: 18px;
+        }
+
+        .feature-title {
+          font-size: 16px;
+          color: #071b41;
+          margin: 0 0 8px;
+          font-weight: 700;
+        }
+
+        .feature-text {
+          font-size: 13.5px;
+          color: #59677f;
+          line-height: 1.65;
+          margin: 0;
+        }
+
+
+        /* RESPONSE PROCESS */
+
+        .process-section {
+          padding: 48px 0 55px;
+          background: #f4f8ff;
+        }
+
+        .process-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+        }
+
+        .process-card {
+          background: #fff;
+          border: 1px solid #dce6f5;
+          border-radius: 7px;
+          padding: 18px;
+          display: flex;
+          gap: 14px;
+          align-items: flex-start;
+        }
+
+        .process-number {
+          width: 44px;
+          height: 44px;
+          min-width: 44px;
+          border-radius: 50%;
+          background: #eaf2ff;
+          color: #1456c3;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        .process-title {
+          font-size: 14px;
+          color: #071b41;
+          margin: 0 0 5px;
+          font-weight: 700;
+        }
+
+        .process-text {
+          font-size: 12.5px;
+          color: #59677f;
+          line-height: 1.5;
+          margin: 0;
+        }
+
+
+        /* PLATFORM */
+
+        .overview-section {
+          padding: 58px 0;
+          background: #fff;
+        }
+
+        .overview-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 55px;
+          align-items: center;
+        }
+
+        .overview-text {
+          color: #59677f;
+          font-size: 15px;
+          line-height: 1.7;
+          max-width: 500px;
+          margin-bottom: 18px;
+        }
+
+        .about-link {
+          color: #1769e0;
+          font-size: 14px;
+          font-weight: 600;
+          text-decoration: none;
+        }
+
+        .info-container {
+          border-left: 1px solid #dce6f5;
+          padding-left: 35px;
+        }
+
+        .info-row {
+          display: flex;
+          gap: 15px;
+          padding-bottom: 18px;
+          margin-bottom: 18px;
+          border-bottom: 1px solid #e4ebf5;
+        }
+
+        .info-icon {
+          width: 38px;
+          height: 38px;
+          min-width: 38px;
+          border-radius: 50%;
+          background: #eaf2ff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #1769e0;
+          font-size: 17px;
+          font-weight: 700;
+        }
+
+        .info-title {
+          font-size: 14px;
+          color: #071b41;
+          margin: 0 0 4px;
+          font-weight: 700;
+        }
+
+        .info-text {
+          font-size: 12.5px;
+          color: #59677f;
+          margin: 0;
+          line-height: 1.5;
+        }
+
+
+        /* MAP */
+
+        .mini-map {
+          background: #0b3978;
+          border-radius: 8px;
+          padding: 0;
+          border: 1px solid rgba(255,255,255,0.25);
+          overflow: hidden;
+        }
+
+        .mini-map svg {
+          display: block;
+          width: 100%;
+          height: auto;
+        }
+
+        .map-footer {
+          display: flex;
+          justify-content: space-between;
+          padding: 12px 16px;
+          color: rgba(255,255,255,0.85);
+          font-size: 11px;
+        }
+
+        .monitoring-status {
+          color: #4b9cff;
+        }
+
+
+        /* CTA */
+
+        .cta-section {
+          background: #073579;
+          padding: 42px 20px;
+          text-align: center;
+          color: #fff;
+        }
+
+        .cta-title {
+          font-size: 25px;
+          margin: 0 0 8px;
+          font-weight: 800;
+        }
+
+        .cta-text {
+          font-size: 14px;
+          color: rgba(255,255,255,0.8);
+          margin-bottom: 20px;
+        }
+
+        .cta-button {
+          display: inline-block;
+          background: #1769e0;
+          color: #fff;
+          padding: 12px 30px;
+          border-radius: 5px;
+          font-size: 14px;
+          font-weight: 700;
+          text-decoration: none;
+        }
+
+
+        /* FOOTER */
+
+        .home-footer {
+          background: #061d42;
+          color: rgba(255,255,255,0.7);
+          padding: 45px 0 22px;
+          font-size: 13px;
+        }
+
+        .footer-top {
+          display: flex;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 40px;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          padding-bottom: 35px;
+          margin-bottom: 20px;
+        }
+
+        .footer-brand {
+          max-width: 320px;
+        }
+
+        .footer-brand-title {
+          color: #fff;
+          font-size: 20px;
+          display: block;
+          margin-bottom: 12px;
+        }
+
+        .footer-brand-text {
+          margin: 0;
+          line-height: 1.7;
+        }
+
+        .footer-navigation {
+          display: flex;
+          gap: 65px;
+          flex-wrap: wrap;
+        }
+
+        .footer-heading {
+          color: #fff;
+          display: block;
+          margin-bottom: 13px;
+          font-size: 12px;
+        }
+
+        .footer-links {
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+
+        .footer-link {
+          color: rgba(255,255,255,0.65);
+          text-decoration: none;
+        }
+
+        .footer-link:hover {
+          color: #fff;
+        }
+
+        .footer-bottom {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 10px;
+          font-size: 12px;
+        }
+
+
+        /* RESPONSIVE */
+
+        @media (max-width: 900px) {
+
           .hero-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: 1fr;
           }
+
           .overview-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: 1fr;
           }
-          .stats-border {
-            border-left: none !important;
-            padding-left: 0 !important;
-            border-top: 1px solid var(--border) !important;
-            padding-top: 20px !important;
-            flex-wrap: wrap !important;
-            gap: 20px !important;
+
+          .info-container {
+            border-left: none;
+            border-top: 1px solid #dce6f5;
+            padding-left: 0;
+            padding-top: 25px;
+          }
+
+          .feature-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .process-grid {
+            grid-template-columns: repeat(2, 1fr);
           }
         }
+
+
+        @media (max-width: 600px) {
+
+          .feature-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .process-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .hero-title {
+            font-size: 36px;
+          }
+
+          .hero-buttons {
+            flex-direction: column;
+          }
+
+          .report-btn,
+          .dashboard-btn {
+            text-align: center;
+          }
+
+          .overview-grid {
+            gap: 35px;
+          }
+
+          .footer-navigation {
+            gap: 35px;
+          }
+        }
+
       `}</style>
+
     </main>
   )
 }
 
-function Stat({ label, value, color }) {
+
+/* =========================
+   FEATURE CARD
+========================= */
+
+function FeatureCard({ icon, title, desc }) {
   return (
-    <div>
-      <p style={{ fontSize: 20, fontWeight: 800, color: color || 'var(--navy)', marginBottom: 2 }}>{value}</p>
-      <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{label}</p>
+    <div className="feature-card">
+
+      <div className="feature-icon">
+        {icon}
+      </div>
+
+      <h3 className="feature-title">
+        {title}
+      </h3>
+
+      <p className="feature-text">
+        {desc}
+      </p>
+
     </div>
   )
 }
 
-function FeatureCard({ icon, title, desc, color }) {
+
+/* =========================
+   PROCESS CARD
+========================= */
+
+function ProcessCard({ number, title, text }) {
   return (
-    <div className="card" style={{ padding: 24, borderTop: `4px solid ${color}` }}>
-      <div style={{ fontSize: 28, marginBottom: 12 }}>{icon}</div>
-      <h3 style={{ fontSize: 16.5, marginBottom: 8, color: 'var(--navy)', fontWeight: 700 }}>{title}</h3>
-      <p style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.55 }}>{desc}</p>
+    <div className="process-card">
+
+      <div className="process-number">
+        {number}
+      </div>
+
+      <div>
+
+        <h4 className="process-title">
+          {title}
+        </h4>
+
+        <p className="process-text">
+          {text}
+        </p>
+
+      </div>
+
     </div>
   )
 }
+
+
+/* =========================
+   INFORMATION ROW
+========================= */
+
+function InfoRow({ title, text }) {
+  return (
+    <div className="info-row">
+
+      <div className="info-icon">
+        ●
+      </div>
+
+      <div>
+
+        <h4 className="info-title">
+          {title}
+        </h4>
+
+        <p className="info-text">
+          {text}
+        </p>
+
+      </div>
+
+    </div>
+  )
+}
+
+
+/* =========================
+   MAP GRAPHIC
+========================= */
 
 function MiniMapGraphic() {
   return (
-    <div style={{ background: '#0f2f57', borderRadius: 12, padding: 18, border: '1px solid rgba(255,255,255,0.15)', boxShadow: 'var(--shadow-md)' }}>
-      <svg viewBox="0 0 400 280" width="100%" height="auto">
-        <rect x="0" y="0" width="400" height="280" rx="8" fill="#0d2a4f" />
-        {/* Grid lines */}
-        {Array.from({ length: 8 }).map((_, i) => (
-          <line key={`h${i}`} x1="0" y1={i * 35} x2="400" y2={i * 35} stroke="#1c3f6b" strokeWidth="1" />
-        ))}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <line key={`v${i}`} x1={i * 35} y1="0" x2={i * 35} y2="280" stroke="#1c3f6b" strokeWidth="1" />
-        ))}
-        {/* Road path */}
-        <path d="M20,220 C120,180 180,240 260,160 S360,100 390,60" stroke="#3a5a82" strokeWidth="6" fill="none" />
+    <div className="mini-map">
 
-        {/* Incident markers */}
-        <circle cx="120" cy="90" r="8" fill="#e13c3c" stroke="#fff" strokeWidth="2" />
-        <circle cx="230" cy="150" r="7" fill="#f2872e" stroke="#fff" strokeWidth="2" />
-        <circle cx="300" cy="80" r="6" fill="#f0c419" stroke="#fff" strokeWidth="2" />
-        <circle cx="90" cy="190" r="6" fill="#2fa860" stroke="#fff" strokeWidth="2" />
+      <svg
+        viewBox="0 0 500 300"
+        width="100%"
+        height="auto"
+      >
+
+        {/* Map background */}
+        <rect
+          width="500"
+          height="300"
+          fill="#0c3670"
+        />
+
+
+        {/* Horizontal map lines */}
+        {Array.from({ length: 10 }).map((_, i) => (
+          <line
+            key={`h${i}`}
+            x1="0"
+            y1={i * 34}
+            x2="500"
+            y2={i * 34}
+            stroke="#174985"
+            strokeWidth="1"
+          />
+        ))}
+
+
+        {/* Vertical map lines */}
+        {Array.from({ length: 14 }).map((_, i) => (
+          <line
+            key={`v${i}`}
+            x1={i * 38}
+            y1="0"
+            x2={i * 38}
+            y2="300"
+            stroke="#174985"
+            strokeWidth="1"
+          />
+        ))}
+
+
+        {/* Roads */}
+        <path
+          d="M20 230 C120 180 150 250 230 180 S370 150 480 55"
+          stroke="#23528b"
+          strokeWidth="7"
+          fill="none"
+        />
+
+        <path
+          d="M50 40 C150 80 180 30 280 90 S390 220 470 250"
+          stroke="#1d4b86"
+          strokeWidth="4"
+          fill="none"
+        />
+
+
+        {/* Incident 1 */}
+        <circle
+          cx="120"
+          cy="90"
+          r="7"
+          fill="#fff"
+        />
+
+        <circle
+          cx="120"
+          cy="90"
+          r="13"
+          fill="none"
+          stroke="#4b9cff"
+          strokeWidth="2"
+        />
+
+
+        {/* Incident 2 */}
+        <circle
+          cx="270"
+          cy="145"
+          r="7"
+          fill="#fff"
+        />
+
+        <circle
+          cx="270"
+          cy="145"
+          r="13"
+          fill="none"
+          stroke="#4b9cff"
+          strokeWidth="2"
+        />
+
+
+        {/* Incident 3 */}
+        <circle
+          cx="365"
+          cy="80"
+          r="7"
+          fill="#fff"
+        />
+
+        <circle
+          cx="365"
+          cy="80"
+          r="13"
+          fill="none"
+          stroke="#4b9cff"
+          strokeWidth="2"
+        />
+
+
+        {/* Incident 4 */}
+        <circle
+          cx="180"
+          cy="220"
+          r="7"
+          fill="#fff"
+        />
+
+        <circle
+          cx="180"
+          cy="220"
+          r="13"
+          fill="none"
+          stroke="#4b9cff"
+          strokeWidth="2"
+        />
+
 
         {/* Dispatch connection */}
-        <line x1="120" y1="90" x2="180" y2="55" stroke="#2f6fed" strokeWidth="2" strokeDasharray="4 4" />
-        <circle cx="180" cy="55" r="10" fill="#fff" stroke="#2f6fed" strokeWidth="2" />
-        <text x="180" y="59" fontSize="10" textAnchor="middle">🚑</text>
+        <line
+          x1="120"
+          y1="90"
+          x2="200"
+          y2="55"
+          stroke="#62a9ff"
+          strokeWidth="2"
+          strokeDasharray="5 5"
+        />
+
+        <circle
+          cx="200"
+          cy="55"
+          r="9"
+          fill="#fff"
+        />
+
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
-        <span>📍 Rourkela Command Sector</span>
-        <span style={{ color: '#2fa860', fontWeight: 700 }}>● 2DSphere Live Match</span>
+
+
+      <div className="map-footer">
+
+        <span>
+          Live Incident Map
+        </span>
+
+        <span>
+          <span className="monitoring-status">
+            ●
+          </span>
+          {' '}Monitoring Active
+        </span>
+
       </div>
+
     </div>
   )
 }
+
 
 export default Home

@@ -34,8 +34,8 @@ function IncidentCard({ incident, onResolve }) {
   const statusText = incident.status === 'unallocated'
     ? 'Unassigned'
     : incident.status === 'allocated'
-    ? 'Assigned'
-    : (incident.status || 'Unassigned')
+      ? 'Assigned'
+      : (incident.status || 'Unassigned')
 
   const reportedTimeText = incident.reportedTime || (incident.createdAt
     ? new Date(incident.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

@@ -1,18 +1,32 @@
-import { useEffect, useState } from 'react'
-
-const getTimeAgo = (dateString) => {
-  if (!dateString) return 'Just now'
-  const now = new Date()
+const formatAlertDateTime = (dateString) => {
+  if (!dateString) return ''
   const created = new Date(dateString)
-  const diffMs = now - created
-  const diffMins = Math.floor(diffMs / 60000)
+  const now = new Date()
   
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `-${diffMins} mins`
-  const diffHours = Math.floor(diffMins / 60)
-  if (diffHours < 24) return `-${diffHours} mins`
-  return created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  // Check if it's today
+  const isToday = created.getDate() === now.getDate() &&
+                  created.getMonth() === now.getMonth() &&
+                  created.getFullYear() === now.getFullYear()
+                  
+  // Check if it's yesterday
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  const isYesterday = created.getDate() === yesterday.getDate() &&
+                      created.getMonth() === yesterday.getMonth() &&
+                      created.getFullYear() === yesterday.getFullYear()
+
+  const timeStr = created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+  
+  if (isToday) {
+    return `Today, ${timeStr}`
+  } else if (isYesterday) {
+    return `Yesterday, ${timeStr}`
+  } else {
+    const dateStr = created.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    return `${dateStr}, ${timeStr}`
+  }
 }
+
 
 const getAlertConfig = (type, severity, title) => {
   const normType = type ? type.toLowerCase() : ''
@@ -82,16 +96,6 @@ const getAlertConfig = (type, severity, title) => {
 }
 
 function HighPriorityAlerts({ alerts, onViewAllLogs }) {
-  const [ticker, setTicker] = useState(0)
-
-  // Force component update every 15s to update "time ago" stamps
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTicker((t) => t + 1)
-    }, 15000)
-    return () => clearInterval(interval)
-  }, [])
-
   return (
     <div className="card" style={cardStyle}>
       {/* Header */}
@@ -125,7 +129,7 @@ function HighPriorityAlerts({ alerts, onViewAllLogs }) {
                     {config.label}
                   </span>
                   <span style={timeStyle}>
-                    {getTimeAgo(alert.createdAt)}
+                    {formatAlertDateTime(alert.createdAt)}
                   </span>
                 </div>
                 <p style={messageStyle}>

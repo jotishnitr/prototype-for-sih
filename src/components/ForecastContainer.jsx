@@ -388,9 +388,28 @@ function ForecastContainer({ isVerified }) {
                   </p>
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: '12.5px', color: 'var(--text-main)', lineHeight: '1.6' }}>
                     {whyThisForecast.map((reason, idx) => (
-                      <li key={idx}>{reason}</li>
+                      <li key={idx}>{String(reason).replace(/\([^)]*total_critical_incidents[^)]*\)/gi, '')}</li>
                     ))}
                   </ul>
+
+                  {/* Explicit Demand Calculation Explanation Box */}
+                  <div style={{
+                    marginTop: 12,
+                    padding: '10px 14px',
+                    background: '#ffffff',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1'
+                  }}>
+                    <div style={{ fontWeight: 700, fontSize: '12px', color: 'var(--navy)', marginBottom: 6 }}>
+                      💡 Resource Demand Calculation Logic (Why required amounts were estimated):
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '8px 16px', fontSize: '12px', color: 'var(--text-main)', lineHeight: '1.4' }}>
+                      <div><b>👨‍🚒 Rescue Teams ({context.resources_breakdown?.rescue_team?.estimated_required ?? 0} Req):</b> 1 team required per unassigned incident (2 for critical).</div>
+                      <div><b>🏠 Shelter Capacity ({context.resources_breakdown?.shelter?.estimated_required ?? 0} Req):</b> Evacuation shelter required for flood & displacement zones.</div>
+                      <div><b>🚑 Medical Units ({context.resources_breakdown?.medical_unit?.estimated_required ?? 0} Req):</b> 1 mobile triage unit required per active medical/injury incident.</div>
+                      <div><b>📦 Supply Depots ({context.resources_breakdown?.supply_depot?.estimated_required ?? 0} Req):</b> Baseline emergency ration kits per active disaster area.</div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

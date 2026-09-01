@@ -322,10 +322,7 @@ Respond with ONLY valid JSON matching this schema:
         // 1. Primary: Google Gemini
         if (gemini?.models?.generateContent) {
             const geminiModels = [
-                'gemini-flash-lite-latest',
-                'gemini-flash-latest',
-                'gemini-2.5-flash-lite',
-                'gemini-2.5-flash'
+                'gemini-flash-latest'
             ];
             for (const model of geminiModels) {
                 try {
@@ -349,9 +346,11 @@ Respond with ONLY valid JSON matching this schema:
         // 2. Secondary Fallback: OpenRouter
         if (!forecast && openrouter?.chat?.completions?.create) {
             const openrouterModels = [
-                'minimax/minimax-m3:free',
+                'nvidia/nemotron-3-ultra-550b-a55b:free',
                 'nvidia/nemotron-3.5-lightning:free',
+                'nvidia/nemotron-3-super-120b-a12b:free',
                 'google/gemma-4-31b-it:free',
+                'minimax/minimax-m3:free',
                 'poolside/laguna-s-2.1:free'
             ];
             for (const model of openrouterModels) {

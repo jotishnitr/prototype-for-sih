@@ -319,17 +319,18 @@ Respond with ONLY valid JSON matching this schema:
         let forecast = null;
         let aiProvider = null;
 
-        // 1. Primary: Google Gemini
+        // 1. Primary: Google Gemini (10s timeout per model)
         if (gemini?.models?.generateContent) {
             const geminiModels = [
                 'gemini-flash-latest'
             ];
             for (const model of geminiModels) {
                 try {
-                    const geminiRes = await gemini.models.generateContent({
+                    const geminiPromise = gemini.models.generateContent({
                         model,
                         contents: prompt
                     });
+                    const geminiRes = await withTimeout(geminiPromise, 10000, `Gemini (${model})`);
                     const text = geminiRes.text;
                     const parsed = parseForecastJson(text);
                     if (parsed && Array.isArray(parsed.shortage_predictions)) {
@@ -338,13 +339,13 @@ Respond with ONLY valid JSON matching this schema:
                         break;
                     }
                 } catch (geminiErr) {
-                    console.warn(`Gemini model ${model} failed:`, geminiErr.message);
+                    console.warn(`Gemini model ${model} failed or timed out:`, geminiErr.message);
                 }
             }
         }
 
-        // 2. Secondary Fallback: OpenRouter
-        if (!forecast && openrouter?.chat?.completions) {
+        // 2. Secondary Fallback: OpenRouter (10s timeout per model)
+        if (!forecast && openrouter) {
             try {
                 const openrouterModels = [
                     'nvidia/nemotron-3-ultra-550b-a55b:free',
@@ -356,10 +357,11 @@ Respond with ONLY valid JSON matching this schema:
                 ];
                 for (const model of openrouterModels) {
                     try {
-                        const completion = await openrouter.chat.completions.create({
+                        const openrouterPromise = openrouter.chat.completions.create({
                             model,
                             messages: [{ role: 'user', content: prompt }]
                         });
+                        const completion = await withTimeout(openrouterPromise, 10000, `OpenRouter (${model})`);
                         const text = completion.choices?.[0]?.message?.content;
                         const parsed = parseForecastJson(text);
                         if (parsed && Array.isArray(parsed.shortage_predictions)) {
@@ -368,7 +370,7 @@ Respond with ONLY valid JSON matching this schema:
                             break;
                         }
                     } catch (openrouterErr) {
-                        console.warn(`OpenRouter model ${model} failed:`, openrouterErr.message);
+                        console.warn(`OpenRouter model ${model} failed or timed out:`, openrouterErr.message);
                     }
                 }
             } catch (openrouterBlockErr) {

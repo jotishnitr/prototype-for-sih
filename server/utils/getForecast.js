@@ -319,10 +319,12 @@ Respond with ONLY valid JSON matching this schema:
         let forecast = null;
         let aiProvider = null;
 
-        // 1. Primary: Google Gemini (25s timeout per model)
+        // 1. Primary: Google Gemini (15s timeout per model)
         if (gemini?.models?.generateContent) {
             const geminiModels = [
-                'gemini-flash-latest'
+                'gemini-flash-lite-latest',
+                'gemini-flash-latest',
+                'gemini-2.5-flash-lite'
             ];
             for (const model of geminiModels) {
                 try {
@@ -330,7 +332,7 @@ Respond with ONLY valid JSON matching this schema:
                         model,
                         contents: prompt
                     });
-                    const geminiRes = await withTimeout(geminiPromise, 25000, `Gemini (${model})`);
+                    const geminiRes = await withTimeout(geminiPromise, 15000, `Gemini (${model})`);
                     const text = geminiRes.text;
                     const parsed = parseForecastJson(text);
                     if (parsed && Array.isArray(parsed.shortage_predictions)) {
@@ -344,15 +346,13 @@ Respond with ONLY valid JSON matching this schema:
             }
         }
 
-        // 2. Secondary Fallback: OpenRouter (25s timeout per model)
+        // 2. Secondary Fallback: OpenRouter (15s timeout per model)
         if (!forecast && openrouter) {
             try {
                 const openrouterModels = [
-                    'nvidia/nemotron-3-ultra-550b-a55b:free',
-                    'nvidia/nemotron-3.5-lightning:free',
-                    'nvidia/nemotron-3-super-120b-a12b:free',
-                    'google/gemma-4-31b-it:free',
                     'minimax/minimax-m3:free',
+                    'google/gemma-4-31b-it:free',
+                    'nvidia/nemotron-3.5-lightning:free',
                     'poolside/laguna-s-2.1:free'
                 ];
                 for (const model of openrouterModels) {
@@ -361,7 +361,7 @@ Respond with ONLY valid JSON matching this schema:
                             model,
                             messages: [{ role: 'user', content: prompt }]
                         });
-                        const completion = await withTimeout(openrouterPromise, 25000, `OpenRouter (${model})`);
+                        const completion = await withTimeout(openrouterPromise, 15000, `OpenRouter (${model})`);
                         const text = completion.choices?.[0]?.message?.content;
                         const parsed = parseForecastJson(text);
                         if (parsed && Array.isArray(parsed.shortage_predictions)) {

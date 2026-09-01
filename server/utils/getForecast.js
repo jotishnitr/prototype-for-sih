@@ -72,14 +72,14 @@ const buildExplainableForecast = (context) => {
         };
     }
 
-    const whyList = [];
-    const predictions = [];
-
-    const unassignedCritical = context.unassigned_critical_incidents ?? critical;
-
-    if (unassignedCritical > 0) whyList.push(`${unassignedCritical} unassigned critical incidents (${critical} total active)`);
-    else if (critical > 0) whyList.push(`${critical} critical incidents active`);
-    if (unassigned > 0) whyList.push(`${unassigned} incidents waiting allocation`);
+    const whyList = [
+        `${unassignedCritical} unassigned critical incidents requiring immediate response (${critical} total active)`,
+        `${unassigned} total incidents awaiting resource dispatch across sector`,
+        `Rescue Teams Demand: 1 team required per unassigned incident (2 for critical)`,
+        `Shelter Capacity Demand: Evacuation shelter required for flood & displacement zones`,
+        `Medical Units Demand: 1 mobile triage unit required per active medical/injury incident`,
+        `Supply Depots Demand: Baseline emergency ration supply per active disaster zone`
+    ];
 
     const resourceTypes = ['rescue_team', 'medical_unit', 'shelter', 'supply_depot'];
 

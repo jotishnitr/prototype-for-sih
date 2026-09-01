@@ -388,7 +388,7 @@ function ForecastContainer({ isVerified }) {
                   </p>
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: '12.5px', color: 'var(--text-main)', lineHeight: '1.6' }}>
                     {whyThisForecast.map((reason, idx) => (
-                      <li key={idx}><b>•</b> {reason}</li>
+                      <li key={idx}>{reason}</li>
                     ))}
                   </ul>
                 </div>

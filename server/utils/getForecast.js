@@ -75,7 +75,10 @@ const buildExplainableForecast = (context) => {
     const whyList = [];
     const predictions = [];
 
-    if (critical > 0) whyList.push(`${critical} critical incidents active`);
+    const unassignedCritical = context.unassigned_critical_incidents ?? critical;
+
+    if (unassignedCritical > 0) whyList.push(`${unassignedCritical} unassigned critical incidents (${critical} total active)`);
+    else if (critical > 0) whyList.push(`${critical} critical incidents active`);
     if (unassigned > 0) whyList.push(`${unassigned} incidents waiting allocation`);
 
     const resourceTypes = ['rescue_team', 'medical_unit', 'shelter', 'supply_depot'];
@@ -201,6 +204,7 @@ const getForecast = async (req, res) => {
 
         const allocatedIncidentIds = new Set(allocations.map(a => String(a.incident_id)));
         const unassignedIncidents = incidents.filter(i => !allocatedIncidentIds.has(String(i._id))).length;
+        const unassignedCriticalIncidents = incidents.filter(i => ((i.severity || 0) >= 4 || i.severity === 'critical') && !allocatedIncidentIds.has(String(i._id))).length;
 
         // Incident breakdown by type
         const incidentBreakdown = {
@@ -285,6 +289,7 @@ const getForecast = async (req, res) => {
         const context = {
             active_incidents: activeIncidents,
             critical_incidents: criticalIncidents,
+            unassigned_critical_incidents: unassignedCriticalIncidents,
             high_incidents: highIncidents,
             unassigned_incidents: unassignedIncidents,
             total_resources: resources.length,
@@ -378,7 +383,8 @@ Respond with ONLY valid JSON matching this schema:
                     'minimax/minimax-m3:free',
                     'google/gemma-4-31b-it:free',
                     'nvidia/nemotron-3.5-lightning:free',
-                    'poolside/laguna-s-2.1:free'
+                    'poolside/laguna-s-2.1:free',
+                    'nvidia/nemotron-3-ultra-550b-a55b:free'
                 ];
                 for (const model of openrouterModels) {
                     try {

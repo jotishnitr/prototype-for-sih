@@ -319,7 +319,7 @@ Respond with ONLY valid JSON matching this schema:
         let forecast = null;
         let aiProvider = null;
 
-        // 1. Primary: Google Gemini (10s timeout per model)
+        // 1. Primary: Google Gemini (25s timeout per model)
         if (gemini?.models?.generateContent) {
             const geminiModels = [
                 'gemini-flash-latest'
@@ -330,7 +330,7 @@ Respond with ONLY valid JSON matching this schema:
                         model,
                         contents: prompt
                     });
-                    const geminiRes = await withTimeout(geminiPromise, 10000, `Gemini (${model})`);
+                    const geminiRes = await withTimeout(geminiPromise, 25000, `Gemini (${model})`);
                     const text = geminiRes.text;
                     const parsed = parseForecastJson(text);
                     if (parsed && Array.isArray(parsed.shortage_predictions)) {
@@ -344,7 +344,7 @@ Respond with ONLY valid JSON matching this schema:
             }
         }
 
-        // 2. Secondary Fallback: OpenRouter (10s timeout per model)
+        // 2. Secondary Fallback: OpenRouter (25s timeout per model)
         if (!forecast && openrouter) {
             try {
                 const openrouterModels = [
@@ -361,7 +361,7 @@ Respond with ONLY valid JSON matching this schema:
                             model,
                             messages: [{ role: 'user', content: prompt }]
                         });
-                        const completion = await withTimeout(openrouterPromise, 10000, `OpenRouter (${model})`);
+                        const completion = await withTimeout(openrouterPromise, 25000, `OpenRouter (${model})`);
                         const text = completion.choices?.[0]?.message?.content;
                         const parsed = parseForecastJson(text);
                         if (parsed && Array.isArray(parsed.shortage_predictions)) {

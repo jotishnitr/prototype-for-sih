@@ -35,13 +35,17 @@ const postAllocate = async (req, res) => {
             resource.rescue_team.available_members = 0;
             resource.rescue_team.available_boats = 0;
             resource.rescue_team.available_vehicles = 0;
+            resource.status = 'deployed';
         } else if (resource.type === 'medical_unit' && resource.medical_unit) {
             resource.medical_unit.available_staff = 0;
             resource.medical_unit.available_ambulances = 0;
             resource.medical_unit.available_beds = 0;
+            resource.status = 'deployed';
         } else if (resource.type === 'shelter' && resource.shelter) {
             resource.shelter.capacity_remaining = 0;
             resource.status = 'full';
+        } else {
+            resource.status = 'deployed';
         }
         await resource.save();
 

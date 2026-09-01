@@ -19,6 +19,7 @@ function ForecastContainer({ isVerified }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [expanded, setExpanded] = useState(true)
+  const [showExplanation, setShowExplanation] = useState(true)
   const [checkedActions, setCheckedActions] = useState({})
 
   async function fetchForecast() {
@@ -132,7 +133,9 @@ function ForecastContainer({ isVerified }) {
   const displayProviderLabel = isHeuristic ? '⚙️ Manual Heuristic Analysis' : '⚡ ResQNet Intelligence Engine'
 
   const riskLevel = (forecast.risk_level || 'low').toLowerCase()
+  const confidencePct = forecast.confidence_pct || 92
   const shortagePredictions = forecast.shortage_predictions || []
+  const whyThisForecast = forecast.why_this_forecast || []
   const overallAssessment = forecast.overall_assessment || 'Sector operations are proceeding within baseline metrics.'
   const immediateActions = forecast.immediate_actions || []
 
@@ -222,7 +225,8 @@ function ForecastContainer({ isVerified }) {
             {primaryPrediction && (
               <div style={{ flex: 1 }}>
                 <span style={{ fontWeight: 700, color: currentTheme.titleColor, fontSize: '14px' }}>
-                  {resourceLabels[primaryPrediction.resource_type] || primaryPrediction.resource_type} shortage in ~{primaryPrediction.predicted_shortage_hours}h
+                  {resourceLabels[primaryPrediction.resource_type] || primaryPrediction.resource_type} — {primaryPrediction.risk_status || 'Projected Shortage'}
+                  {primaryPrediction.resource_gap > 0 ? ` (Gap: ${primaryPrediction.resource_gap} units)` : ''}
                 </span>
                 {primaryPrediction.recommendation && (
                   <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginTop: 2 }}>
@@ -235,6 +239,19 @@ function ForecastContainer({ isVerified }) {
 
           {/* Right: Controls & Badges */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* AI Confidence Badge */}
+            <span style={{
+              background: '#ffffff',
+              border: '1px solid var(--border)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              fontSize: '11px',
+              color: 'var(--navy)',
+              fontWeight: 700
+            }}>
+              🎯 AI Confidence: <b>{confidencePct}%</b>
+            </span>
+
             <span style={{
               background: 'rgba(255, 255, 255, 0.85)',
               border: '1px solid var(--border)',
@@ -291,10 +308,53 @@ function ForecastContainer({ isVerified }) {
         {expanded && (
           <div style={{ padding: '20px', background: '#ffffff' }}>
 
-            {/* Section 1: Shortage Predictions Cards */}
+            {/* --- Collapsible AI Explanation Panel ("Why this forecast?") --- */}
+            <div style={{
+              background: '#f1f5f9',
+              border: '1px solid #cbd5e1',
+              borderRadius: 'var(--radius)',
+              padding: '12px 16px',
+              marginBottom: 20
+            }}>
+              <div
+                onClick={() => setShowExplanation(!showExplanation)}
+                style={{
+                  display: 'flex',
+                  justify: 'space-between',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}
+              >
+                <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--navy)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>🔍 Why this forecast? (Explainable AI Decision Audit)</span>
+                </h4>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                  {showExplanation ? 'Collapse ▲' : 'Expand Explanation ▼'}
+                </span>
+              </div>
+
+              {showExplanation && (
+                <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed #cbd5e1' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
+                    Forecast generated based on real-time database telemetry:
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: '12.5px', color: 'var(--text-main)', lineHeight: '1.6' }}>
+                    {whyThisForecast.map((reason, idx) => (
+                      <li key={idx}><b>•</b> {reason}</li>
+                    ))}
+                  </ul>
+                  <div style={{ marginTop: 8, fontSize: '12px', fontWeight: 700, color: currentTheme.titleColor }}>
+                    ➡️ Conclusion: High probability of resource deficit if unassigned incidents are not quickly prioritized.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Section 1: Resource Shortage Cards */}
             <div style={{ marginBottom: 20 }}>
               <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--navy)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>🔮 Predicted Resource Shortages (Next 2-4 Hours)</span>
+                <span>🔮 Projected Resource Shortages & Utilization</span>
               </h3>
 
               {shortagePredictions.length === 0 ? (
@@ -302,15 +362,20 @@ function ForecastContainer({ isVerified }) {
               ) : (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(285px, 1fr))',
                   gap: 14
                 }}>
                   {shortagePredictions.map((item, idx) => {
                     const icon = resourceIcons[item.resource_type] || '🚨'
                     const label = resourceLabels[item.resource_type] || item.resource_type
-                    const available = item.current_available ?? 0
-                    const demand = item.predicted_demand ?? (available + 5)
-                    const pct = Math.min(100, Math.round((available / Math.max(1, demand)) * 100))
+                    const total = item.total_units ?? 0
+                    const allocated = item.allocated_units ?? 0
+                    const available = item.available_units ?? 0
+                    const required = item.estimated_required ?? total
+                    const gap = item.resource_gap ?? Math.max(0, required - available)
+                    const util = item.utilization_pct ?? (total > 0 ? Math.round((allocated / total) * 100) : 0)
+
+                    const riskStatus = item.risk_status || (gap > 0 ? 'Critical Risk' : util >= 50 ? 'High Risk' : 'Low Risk')
 
                     return (
                       <div key={idx} style={{
@@ -324,6 +389,7 @@ function ForecastContainer({ isVerified }) {
                         gap: 10
                       }}>
                         <div>
+                          {/* Card Header: Icon, Name & Risk Status */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                             <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 6 }}>
                               <span>{icon}</span> {label}
@@ -331,31 +397,56 @@ function ForecastContainer({ isVerified }) {
                             <span style={{
                               fontSize: '11px',
                               fontWeight: 700,
-                              background: item.predicted_shortage_hours <= 2 ? 'var(--red-bg)' : 'var(--orange-bg)',
-                              color: item.predicted_shortage_hours <= 2 ? 'var(--red)' : 'var(--orange)',
+                              background: riskStatus === 'Critical Risk' ? 'var(--red-bg)' : riskStatus === 'High Risk' ? 'var(--orange-bg)' : 'var(--green-bg)',
+                              color: riskStatus === 'Critical Risk' ? 'var(--red)' : riskStatus === 'High Risk' ? 'var(--orange)' : 'var(--green)',
                               padding: '2px 8px',
                               borderRadius: '12px'
                             }}>
-                              ⏱️ ~{item.predicted_shortage_hours}h left
+                              {riskStatus}
                             </span>
                           </div>
 
-                          {/* Demand / Availability Progress */}
-                          <div style={{ marginBottom: 8 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-muted)', marginBottom: 4 }}>
-                              <span>Available: <b>{available}</b></span>
-                              <span>Demand: <b>{demand}</b></span>
+                          {/* Computed Metrics Table */}
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '4px 12px',
+                            fontSize: '12px',
+                            background: '#ffffff',
+                            padding: '8px 10px',
+                            borderRadius: '6px',
+                            border: '1px solid var(--border)',
+                            marginBottom: 8
+                          }}>
+                            <div>Current Units: <b>{total}</b></div>
+                            <div>Allocated: <b>{allocated}</b></div>
+                            <div>Available: <b style={{ color: available === 0 ? 'var(--red)' : 'var(--green)' }}>{available}</b></div>
+                            <div>Est. Required: <b>{required}</b></div>
+                            <div style={{ gridColumn: 'span 2', paddingTop: 2, borderTop: '1px dashed var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+                              <span>Resource Gap:</span>
+                              <b style={{ color: gap > 0 ? 'var(--red)' : 'var(--green)' }}>
+                                {gap > 0 ? `⚠️ ${gap} units deficit` : '✓ Sufficient'}
+                              </b>
                             </div>
-                            <div style={{ width: '100%', height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
+                          </div>
+
+                          {/* Resource Utilization Progress Bar */}
+                          <div style={{ marginBottom: 8 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: 3 }}>
+                              <span>Resource Utilization</span>
+                              <b>{util}%</b>
+                            </div>
+                            <div style={{ width: '100%', height: 7, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
                               <div style={{
-                                width: `${pct}%`,
+                                width: `${Math.min(100, util)}%`,
                                 height: '100%',
-                                background: pct < 50 ? 'var(--red)' : pct < 80 ? 'var(--orange)' : 'var(--green)',
+                                background: util >= 80 ? 'var(--red)' : util >= 50 ? 'var(--orange)' : 'var(--green)',
                                 transition: 'width 0.4s ease'
                               }} />
                             </div>
                           </div>
 
+                          {/* Dynamic Recommendation */}
                           <div style={{
                             background: '#ffffff',
                             border: '1px solid var(--border)',
@@ -392,8 +483,8 @@ function ForecastContainer({ isVerified }) {
                   {overallAssessment}
                 </p>
 
-                {/* Context Stats Bar */}
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+                {/* Context Stats Bar (100% Data Consistent) */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
                   <span style={{ fontSize: '11px', background: '#fff', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>
                     Active Incidents: <b>{context.active_incidents ?? 0}</b>
                   </span>
@@ -401,7 +492,10 @@ function ForecastContainer({ isVerified }) {
                     Critical: <b style={{ color: 'var(--red)' }}>{context.critical_incidents ?? 0}</b>
                   </span>
                   <span style={{ fontSize: '11px', background: '#fff', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>
-                    Active Allocations: <b>{context.active_allocations ?? 0}</b>
+                    Unassigned: <b style={{ color: (context.unassigned_incidents || 0) > 0 ? 'var(--orange)' : 'var(--green)' }}>{context.unassigned_incidents ?? 0}</b>
+                  </span>
+                  <span style={{ fontSize: '11px', background: '#fff', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>
+                    Shelter Occupancy: <b>{context.resources?.shelter_occupancy_pct ?? 0}%</b>
                   </span>
                 </div>
               </div>

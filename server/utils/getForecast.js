@@ -247,6 +247,7 @@ const getForecast = async (req, res) => {
         });
 
         // Availability and Utilization calculations (Rule 2, 3, 4)
+        const allocatedResourceIds = new Set(allocations.map(a => String(a.resource_id)));
         const resourceTypes = ['rescue_team', 'medical_unit', 'shelter', 'supply_depot'];
         const resourcesBreakdown = {};
         let totalAllocatedUnitsSum = 0;
@@ -254,8 +255,8 @@ const getForecast = async (req, res) => {
         resourceTypes.forEach(type => {
             const matching = resources.filter(r => r.type === type);
             const total_units = matching.length;
-            const allocated_units = matching.filter(r => r.status === 'deployed' || r.status === 'busy').length;
-            const available_units = matching.filter(r => r.status === 'available').length;
+            const allocated_units = matching.filter(r => allocatedResourceIds.has(String(r._id))).length;
+            const available_units = Math.max(0, total_units - allocated_units);
 
             totalAllocatedUnitsSum += allocated_units;
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { io } from 'socket.io-client'
 
 const resourceIcons = {
   rescue_team: '👨‍🚒',
@@ -64,9 +65,37 @@ function ForecastContainer({ isVerified }) {
     setLoading(false)
   }
 
+  // Initial fetch and Socket.io reactive listener for real-time updates (Rule 10)
   useEffect(() => {
     if (isVerified) {
       fetchForecast()
+    }
+
+    // Reactive listener across incident & resource socket events
+    let socket;
+    try {
+      socket = io('https://resqnet-fmhd.onrender.com', {
+        withCredentials: true,
+        transports: ['websocket', 'polling']
+      })
+
+      const handleTelemetryUpdate = () => {
+        fetchForecast()
+      }
+
+      socket.on('incident_created', handleTelemetryUpdate)
+      socket.on('incident_updated', handleTelemetryUpdate)
+      socket.on('incident_resolved', handleTelemetryUpdate)
+      socket.on('allocation_created', handleTelemetryUpdate)
+      socket.on('resource_updated', handleTelemetryUpdate)
+    } catch (e) {
+      // Fallback silently if socket connection unavailable
+    }
+
+    return () => {
+      if (socket) {
+        socket.disconnect()
+      }
     }
   }, [isVerified])
 
@@ -108,7 +137,7 @@ function ForecastContainer({ isVerified }) {
           padding: '14px 20px',
           border: '1px solid #feb2b2',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center'
         }}>
           <span style={{ fontSize: '13px', color: 'var(--red)', fontWeight: 600 }}>
@@ -129,17 +158,46 @@ function ForecastContainer({ isVerified }) {
   const forecast = forecastData?.forecast || {}
   const context = forecastData?.context || {}
   const rawProvider = forecastData?.aiProvider || ''
-  const isHeuristic = rawProvider.toLowerCase().includes('heuristic') || rawProvider.toLowerCase().includes('manual') || rawProvider.toLowerCase().includes('rule')
+  const isHeuristic = rawProvider.toLowerCase().includes('heuristic') || rawProvider.toLowerCase().includes('manual') || rawProvider.toLowerCase().includes('telemetry')
   const displayProviderLabel = isHeuristic ? '⚙️ Manual Heuristic Analysis' : '⚡ ResQNet Intelligence Engine'
 
   const riskLevel = (forecast.risk_level || 'low').toLowerCase()
-  const confidencePct = forecast.confidence_pct || 92
+  const confidencePct = forecast.confidence_pct // Rule 8: If missing, hide badge
   const shortagePredictions = forecast.shortage_predictions || []
   const whyThisForecast = forecast.why_this_forecast || []
   const overallAssessment = forecast.overall_assessment || 'Sector operations are proceeding within baseline metrics.'
   const immediateActions = forecast.immediate_actions || []
 
-  // Theme styling based on risk level
+  // Rule 12: Insufficient Data Handling
+  if (forecast.insufficient_data) {
+    return (
+      <div className="container" style={{ margin: '16px auto 0' }}>
+        <div style={{
+          background: '#f8fafc',
+          borderRadius: '10px',
+          padding: '16px 20px',
+          border: '1.5px solid var(--border)',
+          boxShadow: 'var(--shadow-md)',
+          display: 'flex',
+          alignItems: 'center',
+          justify: 'space-between'
+        }}>
+          <span style={{ fontSize: '13.5px', color: 'var(--text-muted)', fontWeight: 600 }}>
+            ℹ️ Insufficient operational data to generate a reliable forecast.
+          </span>
+          <button
+            className="btn btn-small"
+            onClick={fetchForecast}
+            style={{ fontSize: '12px', padding: '4px 10px' }}
+          >
+            🔄 Refresh Data
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Theme styling based on risk level (Rule 9)
   const riskThemes = {
     critical: {
       bg: 'linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%)',
@@ -147,17 +205,7 @@ function ForecastContainer({ isVerified }) {
       badgeBg: '#e53e3e',
       badgeText: '#ffffff',
       icon: '🔴',
-      titleColor: '#9b2c2c',
-      chipBg: '#fff'
-    },
-    high: {
-      bg: 'linear-gradient(135deg, #fffaf0 0%, #feebc8 100%)',
-      border: '#ed8936',
-      badgeBg: '#dd6b20',
-      badgeText: '#ffffff',
-      icon: '🟠',
-      titleColor: '#9c4221',
-      chipBg: '#fff'
+      titleColor: '#9b2c2c'
     },
     medium: {
       bg: 'linear-gradient(135deg, #fffff0 0%, #fefcbf 100%)',
@@ -165,8 +213,7 @@ function ForecastContainer({ isVerified }) {
       badgeBg: '#d69e2e',
       badgeText: '#ffffff',
       icon: '🟡',
-      titleColor: '#744210',
-      chipBg: '#fff'
+      titleColor: '#744210'
     },
     low: {
       bg: 'linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)',
@@ -174,8 +221,7 @@ function ForecastContainer({ isVerified }) {
       badgeBg: '#38a169',
       badgeText: '#ffffff',
       icon: '🟢',
-      titleColor: '#22543d',
-      chipBg: '#fff'
+      titleColor: '#22543d'
     }
   }
 
@@ -225,8 +271,7 @@ function ForecastContainer({ isVerified }) {
             {primaryPrediction && (
               <div style={{ flex: 1 }}>
                 <span style={{ fontWeight: 700, color: currentTheme.titleColor, fontSize: '14px' }}>
-                  {resourceLabels[primaryPrediction.resource_type] || primaryPrediction.resource_type} — {primaryPrediction.risk_status || 'Projected Shortage'}
-                  {primaryPrediction.resource_gap > 0 ? ` (Gap: ${primaryPrediction.resource_gap} units)` : ''}
+                  {resourceLabels[primaryPrediction.resource_type] || primaryPrediction.resource_type} — {primaryPrediction.resource_gap > 0 ? `Gap: ${primaryPrediction.resource_gap} units` : 'No Shortage'}
                 </span>
                 {primaryPrediction.recommendation && (
                   <span style={{ display: 'block', fontSize: '12px', color: 'var(--text-muted)', marginTop: 2 }}>
@@ -239,18 +284,20 @@ function ForecastContainer({ isVerified }) {
 
           {/* Right: Controls & Badges */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* AI Confidence Badge */}
-            <span style={{
-              background: '#ffffff',
-              border: '1px solid var(--border)',
-              padding: '3px 8px',
-              borderRadius: '6px',
-              fontSize: '11px',
-              color: 'var(--navy)',
-              fontWeight: 700
-            }}>
-              🎯 AI Confidence: <b>{confidencePct}%</b>
-            </span>
+            {/* Rule 8: Hide confidence badge if AI model does not return confidence score */}
+            {typeof confidencePct === 'number' && confidencePct > 0 && (
+              <span style={{
+                background: '#ffffff',
+                border: '1px solid var(--border)',
+                padding: '3px 8px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                color: 'var(--navy)',
+                fontWeight: 700
+              }}>
+                🎯 AI Confidence: <b>{confidencePct}%</b>
+              </span>
+            )}
 
             <span style={{
               background: 'rgba(255, 255, 255, 0.85)',
@@ -337,16 +384,13 @@ function ForecastContainer({ isVerified }) {
               {showExplanation && (
                 <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed #cbd5e1' }}>
                   <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
-                    Forecast generated based on real-time database telemetry:
+                    Real-time operational statistics:
                   </p>
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: '12.5px', color: 'var(--text-main)', lineHeight: '1.6' }}>
                     {whyThisForecast.map((reason, idx) => (
                       <li key={idx}><b>•</b> {reason}</li>
                     ))}
                   </ul>
-                  <div style={{ marginTop: 8, fontSize: '12px', fontWeight: 700, color: currentTheme.titleColor }}>
-                    ➡️ Conclusion: High probability of resource deficit if unassigned incidents are not quickly prioritized.
-                  </div>
                 </div>
               )}
             </div>
@@ -354,7 +398,7 @@ function ForecastContainer({ isVerified }) {
             {/* Section 1: Resource Shortage Cards */}
             <div style={{ marginBottom: 20 }}>
               <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--navy)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>🔮 Projected Resource Shortages & Utilization</span>
+                <span>🔮 Resource Availability & Gap Analysis</span>
               </h3>
 
               {shortagePredictions.length === 0 ? (
@@ -375,7 +419,7 @@ function ForecastContainer({ isVerified }) {
                     const gap = item.resource_gap ?? Math.max(0, required - available)
                     const util = item.utilization_pct ?? (total > 0 ? Math.round((allocated / total) * 100) : 0)
 
-                    const riskStatus = item.risk_status || (gap > 0 ? 'Critical Risk' : util >= 50 ? 'High Risk' : 'Low Risk')
+                    const riskStatus = item.risk_status || (gap > 0 ? 'Critical Risk' : util >= 50 ? 'Moderate Risk' : 'Low Risk')
 
                     return (
                       <div key={idx} style={{
@@ -397,8 +441,8 @@ function ForecastContainer({ isVerified }) {
                             <span style={{
                               fontSize: '11px',
                               fontWeight: 700,
-                              background: riskStatus === 'Critical Risk' ? 'var(--red-bg)' : riskStatus === 'High Risk' ? 'var(--orange-bg)' : 'var(--green-bg)',
-                              color: riskStatus === 'Critical Risk' ? 'var(--red)' : riskStatus === 'High Risk' ? 'var(--orange)' : 'var(--green)',
+                              background: riskStatus === 'Critical Risk' ? 'var(--red-bg)' : riskStatus === 'Moderate Risk' ? 'var(--orange-bg)' : 'var(--green-bg)',
+                              color: riskStatus === 'Critical Risk' ? 'var(--red)' : riskStatus === 'Moderate Risk' ? 'var(--orange)' : 'var(--green)',
                               padding: '2px 8px',
                               borderRadius: '12px'
                             }}>
@@ -406,7 +450,7 @@ function ForecastContainer({ isVerified }) {
                             </span>
                           </div>
 
-                          {/* Computed Metrics Table */}
+                          {/* Computed Metrics Table (Rule 2 & 3) */}
                           <div style={{
                             display: 'grid',
                             gridTemplateColumns: '1fr 1fr',
@@ -418,19 +462,20 @@ function ForecastContainer({ isVerified }) {
                             border: '1px solid var(--border)',
                             marginBottom: 8
                           }}>
-                            <div>Current Units: <b>{total}</b></div>
+                            <div>Total Units: <b>{total}</b></div>
                             <div>Allocated: <b>{allocated}</b></div>
                             <div>Available: <b style={{ color: available === 0 ? 'var(--red)' : 'var(--green)' }}>{available}</b></div>
-                            <div>Est. Required: <b>{required}</b></div>
+                            <div>Required: <b>{required}</b></div>
                             <div style={{ gridColumn: 'span 2', paddingTop: 2, borderTop: '1px dashed var(--border)', display: 'flex', justifyContent: 'space-between' }}>
                               <span>Resource Gap:</span>
+                              {/* Rule 3: Resource Gap = Required - Available. If Available >= Required, show "No Shortage" */}
                               <b style={{ color: gap > 0 ? 'var(--red)' : 'var(--green)' }}>
-                                {gap > 0 ? `⚠️ ${gap} units deficit` : '✓ Sufficient'}
+                                {gap > 0 ? `⚠️ ${gap} units` : 'No Shortage'}
                               </b>
                             </div>
                           </div>
 
-                          {/* Resource Utilization Progress Bar */}
+                          {/* Resource Utilization Progress Bar (Rule 4) */}
                           <div style={{ marginBottom: 8 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: 3 }}>
                               <span>Resource Utilization</span>
@@ -446,7 +491,7 @@ function ForecastContainer({ isVerified }) {
                             </div>
                           </div>
 
-                          {/* Dynamic Recommendation */}
+                          {/* Dynamic Recommendation (Rule 7) */}
                           <div style={{
                             background: '#ffffff',
                             border: '1px solid var(--border)',
@@ -466,7 +511,7 @@ function ForecastContainer({ isVerified }) {
               )}
             </div>
 
-            {/* Section 2: Assessment & Immediate Actions */}
+            {/* Section 2: Assessment & Immediate Actions (Rule 5) */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
@@ -483,7 +528,7 @@ function ForecastContainer({ isVerified }) {
                   {overallAssessment}
                 </p>
 
-                {/* Context Stats Bar (100% Data Consistent) */}
+                {/* Context Stats Bar (Rule 5 & 11) */}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
                   <span style={{ fontSize: '11px', background: '#fff', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>
                     Active Incidents: <b>{context.active_incidents ?? 0}</b>
@@ -495,7 +540,7 @@ function ForecastContainer({ isVerified }) {
                     Unassigned: <b style={{ color: (context.unassigned_incidents || 0) > 0 ? 'var(--orange)' : 'var(--green)' }}>{context.unassigned_incidents ?? 0}</b>
                   </span>
                   <span style={{ fontSize: '11px', background: '#fff', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border)', fontWeight: 600 }}>
-                    Shelter Occupancy: <b>{context.resources?.shelter_occupancy_pct ?? 0}%</b>
+                    Allocated Units: <b>{context.total_allocated ?? 0}</b>
                   </span>
                 </div>
               </div>
@@ -503,7 +548,7 @@ function ForecastContainer({ isVerified }) {
               {/* Immediate Actions Protocol */}
               <div style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
                 <h4 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--navy)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>⚡ Recommended Operational Protocol</span>
+                  <span>⚡ Action Protocol</span>
                 </h4>
                 {immediateActions.length === 0 ? (
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No immediate actions pending.</p>

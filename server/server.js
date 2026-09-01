@@ -50,6 +50,7 @@ const deleteResourcesRouter = require('./routes/deleteResources');
 const postJurisdictionRouter = require('./routes/postJurisdiction');
 const getWeatherRouter = require('./routes/getWeather');
 const getPrecautionsRouter = require('./routes/getPrecautions');
+const getForecastRouter = require('./routes/getForecast');
 const Jurisdiction = require('./models/Jurisdiction');
 
 app.use('/api', verifyRouter);
@@ -73,6 +74,7 @@ app.use('/api', deleteResourcesRouter);
 app.use('/api', postJurisdictionRouter);
 app.use('/api', getWeatherRouter);
 app.use('/api', getPrecautionsRouter);
+app.use('/api', getForecastRouter);
 
 app.get('/', (req, res) => res.send('ResQNet API running'));
 

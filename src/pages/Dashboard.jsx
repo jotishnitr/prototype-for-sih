@@ -7,6 +7,7 @@ import AlertCard from '../components/AlertCard.jsx'
 import HighPriorityAlerts from '../components/HighPriorityAlerts.jsx'
 import ResourceReadiness from '../components/ResourceReadiness.jsx'
 import ResourceCard from '../components/ResourceCard.jsx'
+import ForecastContainer from '../components/ForecastContainer.jsx'
 import { io } from 'socket.io-client'
 import { getDistanceKm } from '../data/mockData.js'
 
@@ -810,6 +811,9 @@ function Dashboard({ onUnauthorized }) {
           />
         </div>
       </div>
+
+      {/* AI Resource Demand Forecast Banner & Container */}
+      <ForecastContainer isVerified={isVerified} />
 
       {/* Main grid: map + side panel */}
       <div className="container dash-grid" style={{ padding: '20px 24px 40px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>

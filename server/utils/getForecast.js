@@ -209,7 +209,7 @@ Reply ONLY with this JSON structure, no explanation:
                     const parsed = parseForecastJson(text);
                     if (parsed) {
                         forecast = parsed;
-                        aiProvider = `Gemini (${model})`;
+                        aiProvider = 'ResQNet Intelligence Engine';
                         break;
                     }
                 } catch (geminiErr) {
@@ -239,7 +239,7 @@ Reply ONLY with this JSON structure, no explanation:
                     const parsed = parseForecastJson(text);
                     if (parsed) {
                         forecast = parsed;
-                        aiProvider = `OpenRouter (${model})`;
+                        aiProvider = 'ResQNet Intelligence Engine';
                         break;
                     }
                 } catch (openrouterErr) {
@@ -252,7 +252,7 @@ Reply ONLY with this JSON structure, no explanation:
         if (!forecast) {
             console.warn('AI models unavailable, using heuristic fallback forecast');
             forecast = getHeuristicForecast(context);
-            aiProvider = 'ResQNet Heuristic Engine';
+            aiProvider = 'Manual Heuristic Analysis';
         }
 
         return res.status(200).json({ forecast, context, aiProvider });

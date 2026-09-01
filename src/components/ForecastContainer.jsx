@@ -121,7 +121,9 @@ function ForecastContainer({ isVerified }) {
 
   const forecast = forecastData?.forecast || {}
   const context = forecastData?.context || {}
-  const aiProvider = forecastData?.aiProvider || 'ResQNet AI Engine'
+  const rawProvider = forecastData?.aiProvider || ''
+  const isHeuristic = rawProvider.toLowerCase().includes('heuristic') || rawProvider.toLowerCase().includes('manual') || rawProvider.toLowerCase().includes('rule')
+  const displayProviderLabel = isHeuristic ? '⚙️ Manual Heuristic Analysis' : '⚡ ResQNet Intelligence Engine'
 
   const riskLevel = (forecast.risk_level || 'low').toLowerCase()
   const shortagePredictions = forecast.shortage_predictions || []
@@ -236,7 +238,7 @@ function ForecastContainer({ isVerified }) {
               color: 'var(--text-muted)',
               fontWeight: 600
             }}>
-              ⚡ {aiProvider}
+              {displayProviderLabel}
             </span>
 
             <button

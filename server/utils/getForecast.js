@@ -344,31 +344,35 @@ Respond with ONLY valid JSON matching this schema:
         }
 
         // 2. Secondary Fallback: OpenRouter
-        if (!forecast && openrouter?.chat?.completions?.create) {
-            const openrouterModels = [
-                'nvidia/nemotron-3-ultra-550b-a55b:free',
-                'nvidia/nemotron-3.5-lightning:free',
-                'nvidia/nemotron-3-super-120b-a12b:free',
-                'google/gemma-4-31b-it:free',
-                'minimax/minimax-m3:free',
-                'poolside/laguna-s-2.1:free'
-            ];
-            for (const model of openrouterModels) {
-                try {
-                    const completion = await openrouter.chat.completions.create({
-                        model,
-                        messages: [{ role: 'user', content: prompt }]
-                    });
-                    const text = completion.choices?.[0]?.message?.content;
-                    const parsed = parseForecastJson(text);
-                    if (parsed && Array.isArray(parsed.shortage_predictions)) {
-                        forecast = parsed;
-                        aiProvider = 'ResQNet Intelligence Engine';
-                        break;
+        if (!forecast && openrouter?.chat?.completions) {
+            try {
+                const openrouterModels = [
+                    'nvidia/nemotron-3-ultra-550b-a55b:free',
+                    'nvidia/nemotron-3.5-lightning:free',
+                    'nvidia/nemotron-3-super-120b-a12b:free',
+                    'google/gemma-4-31b-it:free',
+                    'minimax/minimax-m3:free',
+                    'poolside/laguna-s-2.1:free'
+                ];
+                for (const model of openrouterModels) {
+                    try {
+                        const completion = await openrouter.chat.completions.create({
+                            model,
+                            messages: [{ role: 'user', content: prompt }]
+                        });
+                        const text = completion.choices?.[0]?.message?.content;
+                        const parsed = parseForecastJson(text);
+                        if (parsed && Array.isArray(parsed.shortage_predictions)) {
+                            forecast = parsed;
+                            aiProvider = 'ResQNet Intelligence Engine';
+                            break;
+                        }
+                    } catch (openrouterErr) {
+                        console.warn(`OpenRouter model ${model} failed:`, openrouterErr.message);
                     }
-                } catch (openrouterErr) {
-                    console.warn(`OpenRouter model ${model} failed:`, openrouterErr.message);
                 }
+            } catch (openrouterBlockErr) {
+                console.warn('OpenRouter client execution error:', openrouterBlockErr.message);
             }
         }
 

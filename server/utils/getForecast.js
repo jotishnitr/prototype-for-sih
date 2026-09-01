@@ -146,7 +146,7 @@ const buildExplainableForecast = (context) => {
     }
 
     // Rule 5: Dynamic AI Situation Summary
-    const overall_assessment = `Active incidents: ${active}. Critical incidents: ${critical}. Unassigned incidents: ${unassigned}. Resources allocated: ${context.total_allocated || 0}. Average response time: ${avgResponseTime} minutes. Operations currently focused on sector safety protocols.`;
+    const overall_assessment = `Active incidents: ${active}. Unassigned critical incidents: ${unassignedCritical}. Total unassigned: ${unassigned}. Resources allocated: ${context.total_allocated || 0}. Average response time: ${avgResponseTime} minutes.`;
 
     // Dynamic Immediate Actions based on detected shortages and incident types
     const immediate_actions = [];
@@ -288,7 +288,8 @@ const getForecast = async (req, res) => {
         // Context built 100% from DB telemetry
         const context = {
             active_incidents: activeIncidents,
-            critical_incidents: criticalIncidents,
+            critical_incidents: unassignedCriticalIncidents,
+            total_critical_incidents: criticalIncidents,
             unassigned_critical_incidents: unassignedCriticalIncidents,
             high_incidents: highIncidents,
             unassigned_incidents: unassignedIncidents,

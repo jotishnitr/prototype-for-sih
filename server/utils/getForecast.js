@@ -197,14 +197,18 @@ Reply ONLY with this JSON structure, no explanation:
 
         // 1. Primary: Google Gemini
         if (gemini?.models?.generateContent) {
-            const geminiModels = ['gemini-flash-latest'];
+            const geminiModels = [
+                'gemini-flash-lite-latest',
+                'gemini-flash-latest',
+                'gemini-2.5-flash-lite',
+                'gemini-2.5-flash'
+            ];
             for (const model of geminiModels) {
                 try {
-                    const geminiPromise = gemini.models.generateContent({
+                    const geminiRes = await gemini.models.generateContent({
                         model,
                         contents: prompt
                     });
-                    const geminiRes = await withTimeout(geminiPromise, 4000, `Gemini (${model})`);
                     const text = geminiRes.text;
                     const parsed = parseForecastJson(text);
                     if (parsed) {
@@ -213,7 +217,7 @@ Reply ONLY with this JSON structure, no explanation:
                         break;
                     }
                 } catch (geminiErr) {
-                    console.warn(`Gemini model ${model} failed or timed out:`, geminiErr.message);
+                    console.warn(`Gemini model ${model} failed:`, geminiErr.message);
                 }
             }
         }
@@ -230,11 +234,10 @@ Reply ONLY with this JSON structure, no explanation:
             ];
             for (const model of openrouterModels) {
                 try {
-                    const openrouterPromise = openrouter.chat.completions.create({
+                    const completion = await openrouter.chat.completions.create({
                         model,
                         messages: [{ role: 'user', content: prompt }]
                     });
-                    const completion = await withTimeout(openrouterPromise, 4000, `OpenRouter (${model})`);
                     const text = completion.choices?.[0]?.message?.content;
                     const parsed = parseForecastJson(text);
                     if (parsed) {
@@ -243,7 +246,7 @@ Reply ONLY with this JSON structure, no explanation:
                         break;
                     }
                 } catch (openrouterErr) {
-                    console.warn(`OpenRouter model ${model} failed or timed out:`, openrouterErr.message);
+                    console.warn(`OpenRouter model ${model} failed:`, openrouterErr.message);
                 }
             }
         }

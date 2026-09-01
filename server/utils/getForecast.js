@@ -212,6 +212,7 @@ const getForecast = async (req, res) => {
         };
 
         // Requirement calculation per incident (Rule 1)
+        // Requirement calculation per incident: 1 unit per unassigned incident (2 if critical)
         const totalRequiredMap = {
             rescue_team: 0,
             medical_unit: 0,
@@ -222,27 +223,24 @@ const getForecast = async (req, res) => {
         incidents.forEach(inc => {
             const type = (inc.type || '').toLowerCase();
             const sev = inc.severity || 2;
-            const weight = sev >= 4 ? 3 : sev === 3 ? 2 : 1;
+            const isCritical = sev >= 4;
             const isAllocated = allocatedIncidentIds.has(String(inc._id));
-            const mult = isAllocated ? 0.5 : 1.0; // Reduced remaining requirement if already allocated
 
-            if (type.includes('flood')) {
-                totalRequiredMap.rescue_team += Math.ceil(weight * 1.5 * mult);
-                totalRequiredMap.shelter += Math.ceil(weight * 2.0 * mult);
-                totalRequiredMap.medical_unit += Math.ceil(weight * 1.0 * mult);
-                totalRequiredMap.supply_depot += Math.ceil(weight * 1.0 * mult);
-            } else if (type.includes('landslide')) {
-                totalRequiredMap.rescue_team += Math.ceil(weight * 2.0 * mult);
-                totalRequiredMap.medical_unit += Math.ceil(weight * 1.5 * mult);
-                totalRequiredMap.supply_depot += Math.ceil(weight * 1.0 * mult);
-            } else if (type.includes('fire')) {
-                totalRequiredMap.rescue_team += Math.ceil(weight * 1.5 * mult);
-                totalRequiredMap.medical_unit += Math.ceil(weight * 1.0 * mult);
-            } else if (type.includes('medical')) {
-                totalRequiredMap.medical_unit += Math.ceil(weight * 2.0 * mult);
+            // Required demand: 1 unit for standard unassigned, 2 for critical unassigned, 0 for allocated
+            const reqDemand = isAllocated ? 0 : (isCritical ? 2 : 1);
+
+            if (type.includes('medical') || type.includes('injury')) {
+                totalRequiredMap.medical_unit += reqDemand;
+            } else if (type.includes('shelter') || type.includes('displaced')) {
+                totalRequiredMap.shelter += reqDemand;
+            } else if (type.includes('supply') || type.includes('ration')) {
+                totalRequiredMap.supply_depot += reqDemand;
             } else {
-                totalRequiredMap.rescue_team += Math.ceil(weight * 1.0 * mult);
-                totalRequiredMap.medical_unit += Math.ceil(weight * 1.0 * mult);
+                // Default: Rescue Team for flood, landslide, fire, trapped, etc.
+                totalRequiredMap.rescue_team += reqDemand;
+                if ((type.includes('flood') || type.includes('cyclone')) && !isAllocated) {
+                    totalRequiredMap.shelter += 1;
+                }
             }
         });
 

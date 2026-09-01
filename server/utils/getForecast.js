@@ -200,15 +200,18 @@ Reply ONLY with this JSON structure, no explanation:
             const geminiModels = [
                 'gemini-flash-lite-latest',
                 'gemini-flash-latest',
-                'gemini-2.5-flash-lite',
-                'gemini-2.5-flash'
+                'gemini-2.5-flash-lite'
             ];
             for (const model of geminiModels) {
                 try {
-                    const geminiRes = await gemini.models.generateContent({
-                        model,
-                        contents: prompt
-                    });
+                    const geminiRes = await withTimeout(
+                        gemini.models.generateContent({
+                            model,
+                            contents: prompt
+                        }),
+                        10000,
+                        `Gemini (${model})`
+                    );
                     const text = geminiRes.text;
                     const parsed = parseForecastJson(text);
                     if (parsed) {
@@ -217,7 +220,7 @@ Reply ONLY with this JSON structure, no explanation:
                         break;
                     }
                 } catch (geminiErr) {
-                    console.warn(`Gemini model ${model} failed:`, geminiErr.message);
+                    console.warn(`Gemini model ${model} failed or timed out:`, geminiErr.message);
                 }
             }
         }
@@ -225,19 +228,21 @@ Reply ONLY with this JSON structure, no explanation:
         // 2. Secondary Fallback: OpenRouter
         if (!forecast && openrouter?.chat?.completions?.create) {
             const openrouterModels = [
-                'nvidia/nemotron-3-ultra-550b-a55b:free',
+                'minimax/minimax-m3:free',
                 'nvidia/nemotron-3.5-lightning:free',
                 'nvidia/nemotron-3-super-120b-a12b:free',
-                'google/gemma-4-31b-it:free',
-                'minimax/minimax-m3:free',
-                'poolside/laguna-s-2.1:free'
+                'google/gemma-4-31b-it:free'
             ];
             for (const model of openrouterModels) {
                 try {
-                    const completion = await openrouter.chat.completions.create({
-                        model,
-                        messages: [{ role: 'user', content: prompt }]
-                    });
+                    const completion = await withTimeout(
+                        openrouter.chat.completions.create({
+                            model,
+                            messages: [{ role: 'user', content: prompt }]
+                        }),
+                        10000,
+                        `OpenRouter (${model})`
+                    );
                     const text = completion.choices?.[0]?.message?.content;
                     const parsed = parseForecastJson(text);
                     if (parsed) {
@@ -246,7 +251,7 @@ Reply ONLY with this JSON structure, no explanation:
                         break;
                     }
                 } catch (openrouterErr) {
-                    console.warn(`OpenRouter model ${model} failed:`, openrouterErr.message);
+                    console.warn(`OpenRouter model ${model} failed or timed out:`, openrouterErr.message);
                 }
             }
         }

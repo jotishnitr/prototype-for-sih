@@ -34,11 +34,16 @@ function ForecastContainer({ isVerified }) {
 
     let success = false
     for (const url of urls) {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
+
       try {
         const response = await fetch(url, {
           method: "GET",
-          credentials: "include"
+          credentials: "include",
+          signal: controller.signal
         })
+        clearTimeout(timeoutId)
 
         if (response.ok) {
           const data = await response.json()
@@ -47,6 +52,7 @@ function ForecastContainer({ isVerified }) {
           break
         }
       } catch (err) {
+        clearTimeout(timeoutId)
         // Try next fallback URL
       }
     }

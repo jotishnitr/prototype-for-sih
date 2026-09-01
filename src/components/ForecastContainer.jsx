@@ -297,21 +297,6 @@ function ForecastContainer({ isVerified }) {
               🕒 Updated: {forecastData?.timestamp ? new Date(forecastData.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </span>
 
-            {/* Confidence Score Badge */}
-            {typeof confidencePct === 'number' && confidencePct > 0 && (
-              <span style={{
-                background: '#ffffff',
-                border: '1px solid var(--border)',
-                padding: '3px 8px',
-                borderRadius: '6px',
-                fontSize: '11px',
-                color: 'var(--navy)',
-                fontWeight: 700
-              }}>
-                🎯 AI Confidence: <b>{confidencePct}%</b>
-              </span>
-            )}
-
             <span style={{
               background: 'rgba(255, 255, 255, 0.85)',
               border: '1px solid var(--border)',

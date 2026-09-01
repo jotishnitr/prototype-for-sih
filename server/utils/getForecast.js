@@ -51,6 +51,7 @@ const parseForecastJson = (text) => {
 const buildExplainableForecast = (context) => {
     const active = context.active_incidents || 0;
     const critical = context.critical_incidents || 0;
+    const unassignedCritical = context.unassigned_critical_incidents ?? critical;
     const high = context.high_incidents || 0;
     const unassigned = context.unassigned_incidents || 0;
     const totalRes = context.total_resources || 0;
@@ -82,7 +83,7 @@ const buildExplainableForecast = (context) => {
     ];
 
     const resourceTypes = ['rescue_team', 'medical_unit', 'shelter', 'supply_depot'];
-
+    const predictions = [];
     let anyGap = false;
 
     resourceTypes.forEach(type => {
@@ -94,12 +95,6 @@ const buildExplainableForecast = (context) => {
             estimated_required: 0,
             resource_gap: 0
         };
-
-        if (type === 'rescue_team') {
-            whyList.push(`${data.available_units} rescue teams available`);
-        } else if (type === 'shelter') {
-            whyList.push(`Shelter occupancy ${shelterOcc}%`);
-        }
 
         let recommendation = '';
         if (data.resource_gap > 0) {
@@ -133,8 +128,6 @@ const buildExplainableForecast = (context) => {
         });
     });
 
-    // Rule 9: Rule-based Forecast Banner Risk Level
-    // Critical Risk if: resource_gap > 0 OR >40% incidents are Critical OR >30% incidents unassigned
     const criticalRatio = active > 0 ? (critical / active) : 0;
     const unassignedRatio = active > 0 ? (unassigned / active) : 0;
 
@@ -145,10 +138,8 @@ const buildExplainableForecast = (context) => {
         risk_level = 'medium';
     }
 
-    // Rule 5: Dynamic AI Situation Summary
     const overall_assessment = `Active incidents: ${active}. Unassigned critical incidents: ${unassignedCritical}. Total unassigned: ${unassigned}. Resources allocated: ${context.total_allocated || 0}. Average response time: ${avgResponseTime} minutes.`;
 
-    // Dynamic Immediate Actions based on detected shortages and incident types
     const immediate_actions = [];
     predictions.forEach(p => {
         if (p.resource_gap > 0) {
@@ -163,12 +154,10 @@ const buildExplainableForecast = (context) => {
         immediate_actions.push('Maintain continuous radio telemetry with dispatched response units.');
     }
 
-    const confidence_pct = Math.min(98, Math.max(86, 88 + Math.min(10, active + totalRes)));
-
     return {
         insufficient_data: false,
         risk_level,
-        confidence_pct,
+        confidence_pct: null,
         shortage_predictions: predictions,
         why_this_forecast: whyList,
         overall_assessment,

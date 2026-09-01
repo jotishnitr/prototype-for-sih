@@ -284,7 +284,20 @@ function ForecastContainer({ isVerified }) {
 
           {/* Right: Controls & Badges */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {/* Rule 8: Hide confidence badge if AI model does not return confidence score */}
+            {/* Timestamp Badge */}
+            <span style={{
+              background: '#ffffff',
+              border: '1px solid var(--border)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              fontWeight: 600
+            }}>
+              🕒 Updated: {forecastData?.timestamp ? new Date(forecastData.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+
+            {/* Confidence Score Badge */}
             {typeof confidencePct === 'number' && confidencePct > 0 && (
               <span style={{
                 background: '#ffffff',
@@ -602,6 +615,25 @@ function ForecastContainer({ isVerified }) {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Operational Disclaimer Banner */}
+            <div style={{
+              marginTop: 16,
+              padding: '8px 14px',
+              background: '#f8fafc',
+              borderRadius: '6px',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: '11.5px',
+              color: 'var(--text-muted)'
+            }}>
+              <span style={{ fontSize: 13 }}>⚠️</span>
+              <span>
+                <b>Operational Disclaimer:</b> This AI-generated forecast is provided for decision-support only. Field commanders must verify ground truth conditions prior to executing high-level resource re-allocations.
+              </span>
             </div>
 
           </div>

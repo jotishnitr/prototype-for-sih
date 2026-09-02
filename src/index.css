@@ -41,6 +41,7 @@ body {
   background: var(--bg);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 #root {
@@ -179,6 +180,10 @@ p {
 @media (max-width: 768px) {
   .container {
     padding: 0 16px;
+  }
+  .map-toolbar-row {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
   }
 
   .navbar-links {

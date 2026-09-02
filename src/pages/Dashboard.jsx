@@ -887,7 +887,7 @@ function Dashboard({ onUnauthorized }) {
             )}
           </div>
 
-          <div className="card" style={{ height: 520, overflow: 'hidden' }}>
+          <div className="card" style={{ height: 520, overflow: 'hidden', position: 'relative'}}>
             <MapView
               incidents={filteredIncidents}
               resources={resources}

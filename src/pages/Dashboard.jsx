@@ -833,7 +833,7 @@ function Dashboard({ onUnauthorized }) {
       <div className="container dash-grid" style={{ padding: '20px 24px 40px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, alignItems: 'start' }}>
         {/* Map column */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+         <div className="map-toolbar-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <div style={{ display: 'flex', gap: 8 }}>
               {['reports', 'resources', 'heatmap'].map((mode) => (
                 <button
